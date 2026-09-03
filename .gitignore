@@ -1,0 +1,39 @@
+# Python bytecode and environments
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+ENV/
+
+# Test, type-check, and coverage artifacts
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.coverage
+coverage.xml
+htmlcov/
+
+# Packaging artifacts
+build/
+dist/
+*.egg-info/
+
+# Documentation builds
+site/
+
+# Downloaded example assets and model weights
+examples/.example_assets/
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.engine
+*.tflite
+*.safetensors
+
+# Editors and operating-system files
+.idea/
+.vscode/
+.DS_Store
