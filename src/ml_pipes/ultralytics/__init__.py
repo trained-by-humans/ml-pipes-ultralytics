@@ -6,7 +6,8 @@ from typing import Any
 from ml_pipes.inspection import TextBlock
 from ml_pipes.inspection._global_registry import register_value_formatter
 
-from .yolo import Model, YOLOEmbed, YOLOPredict, YOLOTrack
+from .yolo import YOLOEmbed, YOLOPredict, YOLOTrack
+from . import result
 
 
 def _format_result(value: Any) -> list[TextBlock]:
@@ -33,4 +34,9 @@ else:
     register_value_formatter(_UltralyticsResults, _format_result)
 
 
-__all__ = ["Model", "YOLOEmbed", "YOLOPredict", "YOLOTrack"]
+__all__ = [
+    "result",
+    "YOLOEmbed",
+    "YOLOPredict",
+    "YOLOTrack",
+]

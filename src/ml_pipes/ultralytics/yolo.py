@@ -21,7 +21,7 @@ Model: TypeAlias = str | Path | NativeModel
 Device: TypeAlias = str | int | Sequence[int]
 Classes: TypeAlias = int | Sequence[int]
 
-__all__ = ["Classes", "Device", "Model", "Source", "Sources", "YOLOEmbed", "YOLOPredict", "YOLOTrack"]
+__all__ = ["Classes", "Device", "Source", "Sources", "YOLOEmbed", "YOLOPredict", "YOLOTrack"]
 
 
 class _YOLOOperation:
