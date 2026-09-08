@@ -8,7 +8,6 @@ package overview and examples, see the repository [README.md](../README.md).
 
 | Surface | Notes |
 |---|---|
-| `Model` | A model path, `Path`, or existing native `ultralytics.engine.model.Model`. Passing an existing model shares it between operators. |
 | `Source` / `Sources` | Native Ultralytics inference-source types, including paths, URLs, camera ids, PIL images, NumPy arrays, Torch tensors, and supported collections. |
 
 ## Model Inference
@@ -23,3 +22,23 @@ package overview and examples, see the repository [README.md](../README.md).
 > `stream=True` is deliberately unsupported at this boundary. For videos or
 > large datasets, use a pipeline specifically designed to decode, batch, and
 > schedule frames before invoking these operators.
+
+## Result Operations
+
+`result` is the module containing the result operators below.
+
+| Operator | Input -> Output | Notes |
+|---|---|---|
+| `result.To(...)` | `Results` -> `Results` | Moves native result tensors to a device or dtype. |
+| `result.Plot(...)` | `Results` -> `ndarray \| Image` | Renders an annotated image. |
+| `result.Show(...)` | `Results` -> `Results` | Displays an annotated image and passes the result through. |
+| `result.ToDataFrame(...)` | `Results` -> `DataFrame` | Converts a result to a pandas dataframe. |
+| `result.ToCSV(...)` | `Results` -> `str` | Converts a result to CSV. |
+| `result.ToJSON(...)` | `Results` -> `str` | Converts a result to JSON. |
+| `result.SaveTXT(...)` | `Results` -> `Results` | Writes labels and passes the result through. |
+| `result.SaveCrop(...)` | `Results` -> `Results` | Writes detected-object crops and passes the result through. |
+| `result.Save(...)` | `Results` -> `Results` | Saves an annotated image and passes the result through. |
+| `result.Summary(...)` | `Results` -> `list[dict[str, Any]]` | Converts a result to summary dictionaries. |
+
+The argument-less `Results` methods `cpu`, `numpy`, `cuda`, `new`, and
+`verbose` can be used directly as unbound methods in a pipeline.

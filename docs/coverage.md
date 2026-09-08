@@ -37,7 +37,7 @@ the native model façade.
 
 > [!TIP]
 > **AS-IS:** To use native model functionality, create or retain an
-> `ultralytics.engine.model.Model` Noneinstance (for example, `YOLO`), pass that
+> `ultralytics.engine.model.Model` instance (for example, `YOLO`), pass that
 > same instance as the `model` constructor parameter for any `YOLO*` operator,
 > and call state,
 > introspection, and callback methods directly on the native model—not on the
@@ -58,3 +58,41 @@ the native model façade.
 > # call your desired function
 > summary = model.info(verbose=False)
 > ```
+
+## Result Functionality Coverage
+
+`Results` fields—`orig_img`, `orig_shape`, `boxes`, `masks`, `probs`,
+`keypoints`, `obb`, `semantic_mask`, `depth`, `speed`, `names`, `path`, and
+`save_dir`—are pure native data. They remain accessible in a pipeline through
+any operator that accepts `Results`, such as `Map`; no dedicated adapter is
+needed.
+
+| Ultralytics `Results` functionality        | ml-pipes operator / access                                                                            |
+|--------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| `cpu()`                                    | Direct call: `Results.cpu`                                                                            |
+| `numpy()`                                  | Direct call: `Results.numpy`                                                                          |
+| `cuda()`                                   | Direct call: `Results.cuda`                                                                           |
+| `new()`                                    | Direct call: `Results.new`                                                                            |
+| `verbose()`                                | Direct call: `Results.verbose`                                                                        |
+| `update(...)`                              | None                                                                                                  |
+| `to(...)`                                  | `result.To(...)`                                                                                      |
+| `plot(...)`                                | `result.Plot(...)`                                                                                    |
+| `show(...)`                                | `result.Show(...)`                                                                                    |
+| `to_df(...)`                               | `result.ToDataFrame(...)`                                                                             |
+| `to_csv(...)`                              | `result.ToCSV(...)`                                                                                   |
+| `to_json(...)`                             | `result.ToJSON(...)`                                                                                  |
+| `save_txt(...)`                            | `result.SaveTXT(...)`                                                                                 |
+| `save_crop(...)`                           | `result.SaveCrop(...)`                                                                                |
+| `save(...)`                                | `result.Save(...)`                                                                                    |
+| `summary(...)`                             | `result.Summary(...)`                                                                                 |
+
+`result.Show`, `result.SaveTXT`, `result.SaveCrop`, and `result.Save` are
+pipeline side effects: after performing the native action, they pass the same
+`Results` object to the next operator. Transformations retain their native
+return values. `update(...)` remains unimplemented while its mutation
+semantics are decided.
+
+> [!TIP]
+> Methods marked **Direct call** have no required arguments beyond the native
+> `Results` instance, so their unbound method can be placed directly in a
+> pipeline. For example, use `Results.verbose` for a `Results` → `str` step.
