@@ -36,8 +36,8 @@ pipeline = Pipeline(
 
 | Example | Upstream source | Note |
 |---|---|---|
-| [`run_detect_and_crop.py`](https://github.com/requiem4machines/ml-pipes-ultralytics/blob/main/examples/run_detect_and_crop.py) | [Object Cropping](https://docs.ultralytics.com/guides/object-cropping/) | Detects objects, saves native result crops, and renders the annotated image. |
-| [`run_segment_and_annotate.py`](https://github.com/requiem4machines/ml-pipes-ultralytics/blob/main/examples/run_segment_and_annotate.py) | [Instance Segmentation and Tracking](https://docs.ultralytics.com/guides/instance-segmentation-and-tracking/) | Runs segmentation and renders instance-coloured masks. |
-| [`run_object_blurrer.py`](https://github.com/requiem4machines/ml-pipes-ultralytics/blob/main/examples/run_object_blurrer.py) | [Object Blurring](https://docs.ultralytics.com/guides/object-blurring/) | Tracks and blurs COCO `person` detections. |
-| [`run_detection_video.py`](https://github.com/requiem4machines/ml-pipes-ultralytics/blob/main/examples/run_detection_video.py) | [Ultralytics predict mode](https://docs.ultralytics.com/modes/predict/) | Uses an explicit OpenCV capture loop and one non-streaming prediction pipeline call per frame. |
-| [`run_track_objects.py`](https://github.com/requiem4machines/ml-pipes-ultralytics/blob/main/examples/run_track_objects.py) | [Ultralytics track mode](https://docs.ultralytics.com/modes/track/) | Preserves native tracker state and draws native tracking IDs plus explicit motion traces. |
+| [`run_detect_and_crop.py`](tutorials/detect_and_crop.md) | [Object Cropping](https://docs.ultralytics.com/guides/object-cropping/) | Detects objects, saves native result crops, and renders the annotated image. |
+| [`run_segment_and_annotate.py`](tutorials/segment_and_annotate.md) | [Instance Segmentation and Tracking](https://docs.ultralytics.com/guides/instance-segmentation-and-tracking/) | Runs segmentation and renders instance-coloured masks. |
+| [`run_object_blurrer.py`](tutorials/object_blurrer.md) | [Object Blurring](https://docs.ultralytics.com/guides/object-blurring/) | Tracks and blurs COCO `person` detections. |
+| [`run_detection_video.py`](tutorials/detection_video.md) | [Ultralytics predict mode](https://docs.ultralytics.com/modes/predict/) | Uses an explicit OpenCV capture loop and one non-streaming prediction pipeline call per frame. |
+| [`run_track_objects.py`](tutorials/track_objects.md) | [Ultralytics track mode](https://docs.ultralytics.com/modes/track/) | Preserves native tracker state and draws native tracking IDs plus explicit motion traces. |
