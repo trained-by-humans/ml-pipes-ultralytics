@@ -5,11 +5,13 @@ verbose)` directly, then pass that instance as the `Model` input to any
 operator. The operators wrap individual model functions; they do not replace
 the native model façade.
 
+Upstream reference: [Ultralytics `Model`](https://docs.ultralytics.com/reference/engine/model/).
+
 | Ultralytics `Model` functionality                                           | ml-pipes equivalent                               |
 |-----------------------------------------------------------------------------|---------------------------------------------------|
-| `model(source, **kwargs)` / <br>`predict(source, predictor=None, **kwargs)` | `YOLOPredict(model, **predict_options)`*          |
-| `embed(source, **kwargs)`                                                   | `YOLOEmbed(model, **embed_options)`*              |
-| `track(source, persist=..., **kwargs)`                                      | `YOLOTrack(model, persist=..., **track_options)`* |
+| `model(source, **kwargs)` / <br>`predict(source, predictor=None, **kwargs)` | `yolo.Predict(model, **predict_options)`*         |
+| `embed(source, **kwargs)`                                                   | `yolo.Embed(model, **embed_options)`*             |
+| `track(source, persist=..., **kwargs)`                                      | `yolo.Track(model, persist=..., **track_options)`* |
 | `val(validator=None, **kwargs)`                                             | None                                              |
 | `train(trainer=None, **kwargs)`                                             | None                                              |
 | `benchmark(**kwargs)`                                                       | None                                              |
@@ -38,21 +40,21 @@ the native model façade.
 > [!TIP]
 > **AS-IS:** To use native model functionality, create or retain an
 > `ultralytics.engine.model.Model` instance (for example, `YOLO`), pass that
-> same instance as the `model` constructor parameter for any `YOLO*` operator,
+> same instance as the `model` constructor parameter for any `yolo.*` operator,
 > and call state,
 > introspection, and callback methods directly on the native model—not on the
 > operator:
 >
 > ```python
 > from ultralytics import YOLO
-> from ml_pipes.ultralytics import YOLOPredict
+> from ml_pipes.ultralytics import yolo
 >
 > # Initialize model directly
 > model = YOLO("yolo26n.pt")
-> operator = YOLOPredict(model, conf=0.25)
+> operator = yolo.Predict(model, conf=0.25)
 >
 > # or simply access it through operator
-> operator = YOLOPredict("yolo26n.pt", conf=0.25)
+> operator = yolo.Predict("yolo26n.pt", conf=0.25)
 > model = operator.model
 >
 > # call your desired function
@@ -67,6 +69,8 @@ the native model façade.
 any operator that accepts `Results`, such as `Map`; no dedicated adapter is
 needed.
 
+Upstream reference: [Ultralytics `Results`](https://docs.ultralytics.com/reference/engine/results/).
+
 | Ultralytics `Results` functionality        | ml-pipes operator / access                                                                            |
 |--------------------------------------------|-------------------------------------------------------------------------------------------------------|
 | `cpu()`                                    | Direct call: `Results.cpu`                                                                            |
@@ -75,18 +79,18 @@ needed.
 | `new()`                                    | Direct call: `Results.new`                                                                            |
 | `verbose()`                                | Direct call: `Results.verbose`                                                                        |
 | `update(...)`                              | None                                                                                                  |
-| `to(...)`                                  | `result.To(...)`                                                                                      |
-| `plot(...)`                                | `result.Plot(...)`                                                                                    |
-| `show(...)`                                | `result.Show(...)`                                                                                    |
-| `to_df(...)`                               | `result.ToDataFrame(...)`                                                                             |
-| `to_csv(...)`                              | `result.ToCSV(...)`                                                                                   |
-| `to_json(...)`                             | `result.ToJSON(...)`                                                                                  |
-| `save_txt(...)`                            | `result.SaveTXT(...)`                                                                                 |
-| `save_crop(...)`                           | `result.SaveCrop(...)`                                                                                |
-| `save(...)`                                | `result.Save(...)`                                                                                    |
-| `summary(...)`                             | `result.Summary(...)`                                                                                 |
+| `to(...)`                                  | `results.To(...)`                                                                                     |
+| `plot(...)`                                | `results.Plot(...)`                                                                                   |
+| `show(...)`                                | `results.Show(...)`                                                                                   |
+| `to_df(...)`                               | `results.ToDataFrame(...)`                                                                            |
+| `to_csv(...)`                              | `results.ToCSV(...)`                                                                                  |
+| `to_json(...)`                             | `results.ToJSON(...)`                                                                                 |
+| `save_txt(...)`                            | `results.SaveTXT(...)`                                                                                |
+| `save_crop(...)`                           | `results.SaveCrop(...)`                                                                               |
+| `save(...)`                                | `results.Save(...)`                                                                                   |
+| `summary(...)`                             | `results.Summary(...)`                                                                                |
 
-`result.Show`, `result.SaveTXT`, `result.SaveCrop`, and `result.Save` are
+`results.Show`, `results.SaveTXT`, `results.SaveCrop`, and `results.Save` are
 pipeline side effects: after performing the native action, they pass the same
 `Results` object to the next operator. Transformations retain their native
 return values. `update(...)` remains unimplemented while its mutation

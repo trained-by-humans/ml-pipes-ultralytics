@@ -21,7 +21,7 @@ Model: TypeAlias = str | Path | NativeModel
 Device: TypeAlias = str | int | Sequence[int]
 Classes: TypeAlias = int | Sequence[int]
 
-__all__ = ["Classes", "Device", "Source", "Sources", "YOLOEmbed", "YOLOPredict", "YOLOTrack"]
+__all__ = ["Classes", "Device", "Embed", "Predict", "Source", "Sources", "Track"]
 
 
 class _YOLOOperation:
@@ -40,7 +40,7 @@ class _YOLOOperation:
 
 
 @Operator
-class YOLOPredict(_YOLOOperation):
+class Predict(_YOLOOperation):
     """A non-streaming pipeline boundary around :meth:`ultralytics.YOLO.predict`."""
 
     def __init__(
@@ -50,7 +50,7 @@ class YOLOPredict(_YOLOOperation):
         verbose: bool = False,
         **predict_options: Any,
     ) -> None:
-        _reject_embed(predict_options, operation="YOLOPredict")
+        _reject_embed(predict_options, operation="Predict")
         super().__init__(model, task, verbose, **predict_options)
 
     def __call__(self, source: Sources) -> list[Results]:
@@ -58,7 +58,7 @@ class YOLOPredict(_YOLOOperation):
 
 
 @Operator
-class YOLOEmbed(_YOLOOperation):
+class Embed(_YOLOOperation):
     """A non-streaming pipeline boundary around :meth:`ultralytics.YOLO.embed`."""
 
     def __init__(
@@ -75,7 +75,7 @@ class YOLOEmbed(_YOLOOperation):
 
 
 @Operator
-class YOLOTrack(_YOLOOperation):
+class Track(_YOLOOperation):
     """A non-streaming pipeline boundary around :meth:`ultralytics.YOLO.track`."""
 
     def __init__(
@@ -89,7 +89,7 @@ class YOLOTrack(_YOLOOperation):
     ) -> None:
         if not isinstance(persist, bool):
             raise TypeError("persist must be bool.")
-        _reject_embed(track_options, operation="YOLOTrack")
+        _reject_embed(track_options, operation="Track")
         super().__init__(model, task, verbose, **track_options)
         self.persist = persist
 
@@ -111,4 +111,4 @@ def _resolve_model(model: Model, *, task: str | None, verbose: bool) -> NativeMo
 
 def _reject_embed(options: dict[str, Any], *, operation: str) -> None:
     if "embed" in options:
-        raise TypeError(f"{operation} does not accept embed; use YOLOEmbed instead.")
+        raise TypeError(f"{operation} does not accept embed; use yolo.Embed instead.")

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from ml_pipes.ultralytics import result as result_ops
+from ml_pipes.ultralytics import results as result_ops
 
 
 class FakeResults:
