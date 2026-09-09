@@ -5,9 +5,9 @@ adds a mask to every detected instance. This pipeline keeps the native result
 intact until the final plotting step, where Ultralytics renders masks, boxes,
 labels, and confidence values.
 
-![Input bus image](../assets/bus.jpg)
-
-![Instance-coloured segmentation](../assets/segment_and_annotate/segmented.jpg)
+| Before | After |
+|---|---|
+| ![Input bus image](../assets/bus.jpg) | ![Instance-coloured segmentation](../assets/segment_and_annotate/segmented.jpg) |
 
 ## Build the pipeline
 

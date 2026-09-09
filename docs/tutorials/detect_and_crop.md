@@ -4,9 +4,9 @@
 detects objects and writes each bounding-box crop to disk. This tutorial makes
 the inference, crop side effect, and final rendering explicit pipeline steps.
 
-![Input bus image](../assets/bus.jpg)
-
-![Annotated bus image](../assets/detect_and_crop/annotated.jpg)
+| Before | After |
+|---|---|
+| ![Input bus image](../assets/bus.jpg) | ![Annotated bus image](../assets/detect_and_crop/annotated.jpg) |
 
 ## Build the pipeline
 

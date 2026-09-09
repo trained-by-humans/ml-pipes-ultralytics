@@ -5,9 +5,9 @@ is useful for privacy-preserving video and image processing. Rather than hiding
 the workflow in a solution class, this tutorial exposes the custom blur step as
 one small operator between native tracking and rendering.
 
-![Input bus image](../assets/bus.jpg)
-
-![Person-only blur result](../assets/object_blurrer/blurred.jpg)
+| Before | After |
+|---|---|
+| ![Input bus image](../assets/bus.jpg) | ![Person-only blur result](../assets/object_blurrer/blurred.jpg) |
 
 ## Build the pipeline
 
