@@ -12,7 +12,7 @@ from . import results, yolo
 def _format_result(value: Any) -> list[TextBlock]:
     fields = ("boxes", "masks", "probs", "keypoints", "obb", "semantic_mask", "depth")
     summary = value.verbose().strip() if any(getattr(value, field, None) is not None for field in fields) else "no predictions"
-    return [TextBlock("Ultralytics Results", [
+    return [TextBlock("ultralytics.Results", [
         ("path", str(value.path)), ("original shape", str(value.orig_shape)),
         ("detections", str(0 if value.boxes is None else len(value.boxes))),
         ("masks", str(0 if value.masks is None else len(value.masks))),
