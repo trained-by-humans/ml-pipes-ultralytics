@@ -14,7 +14,7 @@ boundary, while pipeline configuration and data flow become explicit.
 ## Coverage
 
 The package operator catalog is maintained in
-[docs/INDEX.md](./docs/INDEX.md). The Ultralytics API comparison is in
+[docs/reference.md](./docs/reference.md). The Ultralytics API comparison is in
 [docs/coverage.md](./docs/coverage.md).
 
 ## Install

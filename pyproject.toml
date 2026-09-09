@@ -29,6 +29,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+docs = [
+    "mike>=2.1",
+    "mkdocs-material>=9.6",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/ml_pipes"]

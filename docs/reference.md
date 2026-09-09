@@ -1,8 +1,9 @@
 # ml-pipes-ultralytics Index
 
-This page catalogs the public `ml_pipes.ultralytics` package surface. For the
-Ultralytics `Model` API comparison, see [coverage.md](COVERAGE.md).
-For the package overview and examples, see the repository [README.md](../README.md).
+This page catalogs the public `ml_pipes.ultralytics` package surface.
+
+For the Ultralytics `Model` API comparison, see [coverage.md](coverage.md).
+For the package overview and examples, see the repository [README](https://github.com/requiem4machines/ml-pipes-ultralytics#readme).
 
 ## Public Modules
 
