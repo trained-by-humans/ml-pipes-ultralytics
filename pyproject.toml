@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ml-pipes-ultralytics"
+version = "0.1.0"
+description = "Ultralytics YOLO operators for ml-pipes"
+readme = "README.md"
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE.txt"]
+keywords = ["computer-vision", "ml-pipes", "ultralytics", "yolo"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "ml-pipes-core==0.1.1rc1",
+    "ml-pipes-vision==0.1.1rc1",
+    "ultralytics>=8.4.143",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ml_pipes"]
+
+[tool.hatch.build.targets.sdist]
+include = ["LICENSE.txt", "README.md", "examples", "pyproject.toml", "src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
