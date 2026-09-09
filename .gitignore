@@ -37,3 +37,9 @@ examples/.example_assets/
 .idea/
 .vscode/
 .DS_Store
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.pt
+result.jpg
