@@ -1,3 +1,6 @@
+![python-version](https://img.shields.io/pypi/pyversions/ultralytics)
+[![Ultralytics Coverage](https://img.shields.io/badge/ultralytics-8.4.143-purple)](./docs/coverage.md)
+
 # ml-pipes-ultralytics
 
 [Ultralytics](https://github.com/ultralytics/ultralytics) is the open-source
@@ -70,3 +73,6 @@ pipeline that explicitly owns decoding, batching, and frame scheduling.
 | [`run_track_objects.py`](./examples/run_track_objects.py) | [Ultralytics track mode](https://docs.ultralytics.com/modes/track/) | Preserves native tracker state and draws native tracking IDs plus explicit motion traces. |
 
 </details>
+
+For additional YOLO examples and broader computer-vision use cases, see
+[ml-pipes-supervision](https://github.com/requiem4machines/ml-pipes-supervision).
