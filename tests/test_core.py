@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import pytest
+import numpy as np
+import numpy.typing as npt
 from torch import Tensor
 
 from ml_pipes.core import Pipeline
+from ml_pipes.standard import Gather, Scatter
 from ml_pipes.ultralytics import yolo
 
 
@@ -84,3 +89,30 @@ def test_native_yolo_track_forwards_options_and_persists_at_operator_scope() -> 
 def test_native_yolo_track_rejects_streaming_when_pipeline_configuration_is_built() -> None:
     with pytest.raises(ValueError, match="Streaming"):
         yolo.Track("detect.pt", stream=True)
+
+
+def test_yolo_operator_contract_accepts_a_gathered_bgr_batch() -> None:
+    pipeline = Pipeline(
+        [
+            Scatter(),
+            Gather(),
+            yolo.Predict(),
+        ],
+        auto_validate=False,
+    )
+
+    pipeline.validate(list[npt.NDArray[np.uint8]])
+
+
+class _PathSequence(Sequence[str]):
+    def __getitem__(self, index: int) -> str:
+        return ("one.jpg", "two.jpg")[index]
+
+    def __len__(self) -> int:
+        return 2
+
+
+def test_yolo_source_normalization_converts_generic_sequences_to_a_list() -> None:
+    source = _PathSequence()
+
+    assert yolo._native_source(source) == ["one.jpg", "two.jpg"]

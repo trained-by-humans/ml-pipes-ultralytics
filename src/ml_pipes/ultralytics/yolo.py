@@ -15,8 +15,8 @@ from ultralytics.engine.results import Results
 
 from ml_pipes.operator import Operator
 
-Source: TypeAlias = str | Path | int | Image | npt.NDArray[np.generic] | Tensor
-Sources: TypeAlias = Source | list[Source] | tuple[Source, ...]
+Source: TypeAlias = str | Path | int | Image | npt.NDArray[Any] | Tensor
+Sources: TypeAlias = Source | Sequence[Source]
 Model: TypeAlias = str | Path | NativeModel
 Device: TypeAlias = str | int | Sequence[int]
 Classes: TypeAlias = int | Sequence[int]
@@ -54,7 +54,7 @@ class Predict(_YOLOOperation):
         super().__init__(model, task, verbose, **predict_options)
 
     def __call__(self, source: Sources) -> list[Results]:
-        return self.model(source=source, **self.options)
+        return self.model(source=_native_source(source), **self.options)
 
 
 @Operator
@@ -71,7 +71,7 @@ class Embed(_YOLOOperation):
         super().__init__(model, task, verbose, **embed_options)
 
     def __call__(self, source: Sources) -> list[Tensor]:
-        return self.model.embed(source=source, **self.options)
+        return self.model.embed(source=_native_source(source), **self.options)
 
 
 @Operator
@@ -94,12 +94,21 @@ class Track(_YOLOOperation):
         self.persist = persist
 
     def __call__(self, source: Sources) -> list[Results]:
-        return self.model.track(source=source, persist=self.persist, **self.options)
+        return self.model.track(
+            source=_native_source(source), persist=self.persist, **self.options
+        )
 
 
 def _reject_streaming(options: dict[str, Any]) -> None:
     if options.get("stream", False):
         raise ValueError("Streaming is not supported by ml-pipes-ultralytics yet.")
+
+
+def _native_source(source: Sources) -> Source | list[Source] | tuple[Source, ...]:
+    """Convert generic pipeline sequences to Ultralytics' list/tuple contract."""
+    if isinstance(source, Sequence) and not isinstance(source, (str, list, tuple)):
+        return list(source)
+    return source
 
 
 def _resolve_model(model: Model, *, task: str | None, verbose: bool) -> NativeModel:
