@@ -3,6 +3,15 @@
 
 # ml-pipes-ultralytics
 
+> [!IMPORTANT] 
+> `ml-pipes-ultralytics` remains a community-maintained operator package
+> within the [ml-pipes](https://github.com/trained-by-humans) ecosystem. The
+> project has its own maintainers and development roadmap, while benefiting
+> from ml-pipes' verified publishing and distribution process. 
+> 
+> For contributions, issues, and project decisions, use this repository's
+> maintainers and issue tracker.
+
 [Ultralytics](https://github.com/ultralytics/ultralytics) is the open-source
 repository behind the YOLO computer-vision framework. It provides model
 training, validation, prediction, tracking, export, and native `Results`
