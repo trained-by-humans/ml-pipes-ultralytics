@@ -32,7 +32,7 @@ The package operator catalog is maintained in
 ## Install
 
 ```bash
-python -m pip install "ml-pipes-ultralytics @ git+https://github.com/requiem4machines/ml-pipes-ultralytics.git"
+python -m pip install ml-pipes-ultralytics
 ```
 
 Ultralytics is distributed under AGPL-3.0 or an enterprise license; make sure

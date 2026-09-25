@@ -6,10 +6,10 @@ prediction, embedding, tracking, and result operations as composable
 Ultralytics models and `Results` stay intact, while inference configuration and
 pipeline data flow are explicit.
 
-Install directly from this repository in a Python 3.10+ environment:
+Install from PyPI in a Python 3.10+ environment:
 
 ```bash
-python -m pip install "ml-pipes-ultralytics @ git+https://github.com/requiem4machines/ml-pipes-ultralytics.git"
+python -m pip install ml-pipes-ultralytics
 ```
 
 The package installs `ml-pipes-core`, `ml-pipes-vision`, and Ultralytics. See
