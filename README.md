@@ -35,8 +35,15 @@ The package operator catalog is maintained in
 python -m pip install ml-pipes-ultralytics
 ```
 
-Ultralytics is distributed under AGPL-3.0 or an enterprise license; make sure
-your use complies with its licensing terms.
+## License and Ultralytics terms
+
+`ml-pipes-ultralytics` is licensed under the [Apache License 2.0](./LICENSE.txt).
+It requires [Ultralytics](https://github.com/ultralytics/ultralytics), which is
+licensed separately under AGPL-3.0 or an [Ultralytics Enterprise
+License](https://www.ultralytics.com/license). Installing or using this package
+does not grant rights to Ultralytics software or model weights. Users of the
+community Ultralytics distribution must comply with AGPL-3.0; Enterprise users
+must ensure their Ultralytics agreement covers their intended use.
 
 ## Quickstart
 

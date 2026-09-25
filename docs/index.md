@@ -32,6 +32,16 @@ pipeline = Pipeline(
 )
 ```
 
+## Licensing
+
+`ml-pipes-ultralytics` is licensed under the [Apache License 2.0](../LICENSE.txt).
+It requires Ultralytics, which is licensed separately under AGPL-3.0 or an
+[Ultralytics Enterprise License](https://www.ultralytics.com/license).
+Installing or using this package does not grant rights to Ultralytics software
+or model weights. Community Ultralytics users must comply with AGPL-3.0;
+Enterprise users must ensure their Ultralytics agreement covers their intended
+use.
+
 ## Built with Ultralytics x ml-pipes
 
 | Example | Upstream source | Note |

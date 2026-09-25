@@ -7,13 +7,13 @@ name = "ml-pipes-ultralytics"
 version = "0.1.0"
 description = "Ultralytics YOLO operators for ml-pipes"
 readme = "README.md"
-license = "AGPL-3.0-or-later"
+license = "Apache-2.0"
 license-files = ["LICENSE.txt"]
 keywords = ["computer-vision", "ml-pipes", "ultralytics", "yolo"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
