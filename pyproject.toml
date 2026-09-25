@@ -45,7 +45,7 @@ docs = [
 packages = ["src/ml_pipes"]
 
 [tool.hatch.build.targets.sdist]
-include = ["LICENSE.txt", "README.md", "examples", "pyproject.toml", "src", "tests"]
+include = ["LICENSE.txt", "README.md", "pyproject.toml", "src/ml_pipes"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
