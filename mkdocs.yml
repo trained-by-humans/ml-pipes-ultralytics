@@ -1,6 +1,6 @@
 site_name: ml-pipes-ultralytics
 site_description: Ultralytics YOLO capabilities as composable ml-pipes operators.
-site_url: https://requiem4machines.github.io/ml-pipes-ultralytics/
+site_url: https://trained-by-humans.github.io/ml-pipes-ultralytics/
 repo_name: ml-pipes-ultralytics
 
 theme:

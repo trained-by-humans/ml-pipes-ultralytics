@@ -63,5 +63,5 @@ python examples/run_detect_and_crop.py
 python examples/run_detect_and_crop.py --source path/to/image.jpg --show
 ```
 
-See [`run_detect_and_crop.py`](https://github.com/requiem4machines/ml-pipes-ultralytics/blob/main/examples/run_detect_and_crop.py)
+See [`run_detect_and_crop.py`](https://github.com/trained-by-humans/ml-pipes-ultralytics/blob/main/examples/run_detect_and_crop.py)
 for all command-line options.

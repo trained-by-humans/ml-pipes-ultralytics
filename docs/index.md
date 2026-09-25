@@ -16,7 +16,7 @@ The package installs `ml-pipes-core`, `ml-pipes-vision`, and Ultralytics. See
 the [Reference](reference.md) for the public operator surface and
 [Coverage](coverage.md) for the native Ultralytics API comparison.
 
-Start with the runnable [examples](https://github.com/requiem4machines/ml-pipes-ultralytics/tree/main/examples):
+Start with the runnable [examples](https://github.com/trained-by-humans/ml-pipes-ultralytics/tree/main/examples):
 
 ```python
 from ml_pipes.core import Pipeline

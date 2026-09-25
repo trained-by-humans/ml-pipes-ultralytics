@@ -61,5 +61,5 @@ python examples/run_detection_video.py --input people-walking.mp4 --show
 python examples/run_detection_video.py --input 0 --show
 ```
 
-See [`run_detection_video.py`](https://github.com/requiem4machines/ml-pipes-ultralytics/blob/main/examples/run_detection_video.py)
+See [`run_detection_video.py`](https://github.com/trained-by-humans/ml-pipes-ultralytics/blob/main/examples/run_detection_video.py)
 for optional MP4 output and inference configuration.

@@ -9,7 +9,7 @@ Clone the repository, create and activate a Python 3.10+ virtual environment,
 then install the package in editable mode:
 
 ```bash
-git clone https://github.com/requiem4machines/ml-pipes-ultralytics.git
+git clone https://github.com/trained-by-humans/ml-pipes-ultralytics.git
 cd ml-pipes-ultralytics
 python -m venv .venv
 source .venv/bin/activate

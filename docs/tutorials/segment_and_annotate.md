@@ -59,5 +59,5 @@ python examples/run_segment_and_annotate.py
 python examples/run_segment_and_annotate.py --source path/to/image.jpg --show
 ```
 
-See [`run_segment_and_annotate.py`](https://github.com/requiem4machines/ml-pipes-ultralytics/blob/main/examples/run_segment_and_annotate.py)
+See [`run_segment_and_annotate.py`](https://github.com/trained-by-humans/ml-pipes-ultralytics/blob/main/examples/run_segment_and_annotate.py)
 for all command-line options.

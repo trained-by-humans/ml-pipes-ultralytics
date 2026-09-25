@@ -61,5 +61,5 @@ python examples/run_object_blurrer.py
 python examples/run_object_blurrer.py --source path/to/image.jpg --show
 ```
 
-See [`run_object_blurrer.py`](https://github.com/requiem4machines/ml-pipes-ultralytics/blob/main/examples/run_object_blurrer.py)
+See [`run_object_blurrer.py`](https://github.com/trained-by-humans/ml-pipes-ultralytics/blob/main/examples/run_object_blurrer.py)
 for all command-line options.

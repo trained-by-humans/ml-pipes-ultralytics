@@ -84,4 +84,4 @@ pipeline that explicitly owns decoding, batching, and frame scheduling.
 </details>
 
 For additional YOLO examples and broader computer-vision use cases, see
-[ml-pipes-supervision](https://github.com/requiem4machines/ml-pipes-supervision).
+[ml-pipes-supervision](https://github.com/trained-by-humans/ml-pipes-supervision).
