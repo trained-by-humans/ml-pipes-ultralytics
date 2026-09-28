@@ -37,8 +37,7 @@ Changelog = "https://github.com/trained-by-humans/ml-pipes-ultralytics/releases"
 [project.optional-dependencies]
 test = ["pytest>=8"]
 docs = [
-    "mike>=2.1",
-    "mkdocs-material>=9.6",
+    "mkdocs-pixel-lab==0.1.0rc1",
 ]
 
 [tool.hatch.build.targets.wheel]
