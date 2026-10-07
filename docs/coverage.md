@@ -1,3 +1,9 @@
+---
+title: Ultralytics Model and Results API Coverage
+description: >-
+  Compare Ultralytics Model and Results APIs with ml-pipes operators, including prediction, embeddings, tracking, native methods, and unsupported functionality.
+---
+
 # Model Functionality Coverage
 
 Model initialization is handled as-is: construct `YOLO(model, task,
