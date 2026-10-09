@@ -1,7 +1,7 @@
 ---
 title: Detect and Crop Objects with Ultralytics YOLO
 description: >-
-  Build an ml-pipes pipeline with Ultralytics YOLO to detect objects, save bounding-box crops, and render annotated images using native Results operations.
+  Build a pipeline with Ultralytics YOLO to detect objects, save bounding-box crops, and render annotated images using native Results operations in ml-pipes.
 ---
 
 # Detect and Crop

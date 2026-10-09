@@ -1,7 +1,7 @@
 ---
 title: Track Objects in Video with Ultralytics YOLO
 description: >-
-  Track objects across video frames with Ultralytics YOLO and ml-pipes, preserving native tracker IDs and drawing motion traces with a custom operator.
+  Track objects across video frames with Ultralytics YOLO in ml-pipes, preserving native tracker IDs and drawing motion traces with a custom operator.
 ---
 
 # Track Objects on Video

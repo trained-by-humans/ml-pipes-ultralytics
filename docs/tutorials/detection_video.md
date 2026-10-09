@@ -1,7 +1,7 @@
 ---
 title: Detect Objects in Video with Ultralytics YOLO
 description: >-
-  Run Ultralytics YOLO detection on video with an explicit OpenCV frame loop and reusable ml-pipes pipeline for prediction, annotation, and output.
+  Run Ultralytics YOLO detection on video frames for prediction, annotation, and output via ml-pipes.
 ---
 
 # Detect Objects on Video
