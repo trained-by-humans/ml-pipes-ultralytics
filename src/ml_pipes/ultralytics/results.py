@@ -2,18 +2,17 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 import numpy as np
 import numpy.typing as npt
+from PIL.Image import Image
+from polars import DataFrame
 from torch import Tensor
 from ultralytics.engine.results import Results
 
 from ml_pipes.operator import Operator
 from ml_pipes.standard import SideEffectOp
-
-if TYPE_CHECKING:
-    from pandas import DataFrame
 
 __all__ = ["Plot", "Save", "SaveCrop", "SaveTXT", "Show", "Summary", "To", "ToCSV", "ToDataFrame", "ToJSON"]
 
@@ -74,7 +73,7 @@ class Plot:
         self.color_mode = color_mode
         self.txt_color = txt_color
 
-    def __call__(self, results: Results) -> npt.NDArray[np.uint8]:
+    def __call__(self, results: Results) -> npt.NDArray[np.uint8] | Image:
         return results.plot(
             conf=self.conf,
             line_width=self.line_width,
@@ -110,7 +109,7 @@ class Show(SideEffectOp[ResultT], Generic[ResultT]):
 
 @Operator
 class ToDataFrame:
-    """Convert a native result to a pandas dataframe."""
+    """Convert a native result to a Polars dataframe."""
 
     def __init__(self, normalize: bool = False, decimals: int = 5) -> None:
         self.normalize = normalize

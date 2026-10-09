@@ -43,7 +43,7 @@ See the upstream [Ultralytics `Results` reference](https://docs.ultralytics.com/
 | `results.To(...)` | `Results` -> `Results` | Moves native result tensors to a device or dtype. |
 | `results.Plot(...)` | `Results` -> `ndarray \| Image` | Renders an annotated image. |
 | `results.Show(...)` | `Results` -> `Results` | Displays an annotated image and passes the result through. |
-| `results.ToDataFrame(...)` | `Results` -> `DataFrame` | Converts a result to a pandas dataframe. |
+| `results.ToDataFrame(...)` | `Results` -> `polars.DataFrame` | Converts a result to a Polars dataframe. |
 | `results.ToCSV(...)` | `Results` -> `str` | Converts a result to CSV. |
 | `results.ToJSON(...)` | `Results` -> `str` | Converts a result to JSON. |
 | `results.SaveTXT(...)` | `Results` -> `Results` | Writes labels and passes the result through. |
