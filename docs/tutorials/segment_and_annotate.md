@@ -1,3 +1,9 @@
+---
+title: Segment and Annotate Images with Ultralytics YOLO
+description: >-
+  Build a pipeline for Ultralytics YOLO instance segmentation, preserving native Results and rendering coloured masks, boxes, labels, and confidence in ml-pipes.
+---
+
 # Segment and Annotate
 
 [Ultralytics instance segmentation](https://docs.ultralytics.com/guides/instance-segmentation-and-tracking/)

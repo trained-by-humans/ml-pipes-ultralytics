@@ -1,3 +1,9 @@
+---
+title: ml-pipes-ultralytics
+description: >-
+  Compose Ultralytics YOLO prediction, embedding, tracking, and native result operations as explicit ml-pipes pipelines. Install the package and explore examples.
+---
+
 # ml-pipes-ultralytics
 
 `ml-pipes-ultralytics` provides [Ultralytics YOLO](https://github.com/ultralytics/ultralytics)

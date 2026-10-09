@@ -1,3 +1,9 @@
+---
+title: Blur People with Ultralytics YOLO
+description: >-
+  Use Ultralytics YOLO tracking and a custom blur operator in ml-pipes to detect people, blur their bounding boxes, and render native annotations.
+---
+
 # Blur People
 
 [Ultralytics Object Blurring](https://docs.ultralytics.com/guides/object-blurring/)

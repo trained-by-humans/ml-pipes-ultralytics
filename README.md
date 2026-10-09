@@ -1,7 +1,18 @@
-![python-version](https://img.shields.io/pypi/pyversions/ultralytics)
-[![Ultralytics Coverage](https://img.shields.io/badge/ultralytics-8.4.143-purple)](./docs/coverage.md)
+<p align="center">
+  <img src="assets/stacked-title.svg" alt="ml-pipes-ultralytics stacked-text logo" width="640">
+</p>
 
-# ml-pipes-ultralytics
+<p align="center">
+  <a href="https://pypi.org/project/ml-pipes-ultralytics/"><img src="https://img.shields.io/pypi/v/ml-pipes-ultralytics?style=flat-square&amp;logo=pypi&amp;logoColor=white&amp;label=PyPI&amp;color=C48800" alt="Latest PyPI release"></a>
+  <a href="https://pypi.org/project/ml-pipes-ultralytics/"><img src="https://img.shields.io/badge/Python-3.10%2B-2377C8?style=flat-square&amp;logo=python&amp;logoColor=white" alt="Python 3.10 or newer"></a>
+  <a href="https://github.com/trained-by-humans/ml-pipes-ultralytics/blob/main/LICENSE.txt"><img src="https://img.shields.io/pypi/l/ml-pipes-ultralytics?style=flat-square&amp;label=License&amp;color=287C35" alt="Apache 2.0 license"></a>
+  <a href="docs/coverage.md"><img src="https://img.shields.io/badge/Ultralytics-8.4.143-0B23A9?style=flat-square" alt="Ultralytics 8.4.143 API coverage"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/ultralytics/ultralytics">Ultralytics YOLO</a> capabilities as composable operators in <a href="https://github.com/trained-by-humans/ml-pipes">ml-pipes</a>.<br>
+  Build explicit computer-vision pipelines for prediction, embedding, tracking, and result processing.
+</p>
 
 > [!IMPORTANT] 
 > `ml-pipes-ultralytics` remains a community-maintained operator package
@@ -11,17 +22,6 @@
 > 
 > For contributions, issues, and project decisions, use this repository's
 > maintainers and issue tracker.
-
-[Ultralytics](https://github.com/ultralytics/ultralytics) is the open-source
-repository behind the YOLO computer-vision framework. It provides model
-training, validation, prediction, tracking, export, and native `Results`
-objects for detection, segmentation, pose, classification, and oriented-box
-tasks.
-
-`ml-pipes-ultralytics` makes its prediction, embedding, tracking, and result
-operations composable [ml-pipes](https://github.com/trained-by-humans/ml-pipes)
-operators. Native Ultralytics models and `Results` remain intact at the
-boundary, while pipeline configuration and data flow become explicit.
 
 ## Coverage
 

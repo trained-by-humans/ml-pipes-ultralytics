@@ -1,3 +1,9 @@
+---
+title: Ultralytics Operator Reference
+description: >-
+  Reference for ml_pipes.ultralytics operators: YOLO prediction, embeddings, tracking, and native Results plotting, conversion, saving, and cropping.
+---
+
 # ml-pipes-ultralytics Index
 
 This page catalogs the public `ml_pipes.ultralytics` package surface.
