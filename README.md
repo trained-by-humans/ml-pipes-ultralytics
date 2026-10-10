@@ -23,17 +23,20 @@
 > For contributions, issues, and project decisions, use this repository's
 > maintainers and issue tracker.
 
-## Coverage
-
-The package operator catalog is maintained in
-[docs/reference.md](./docs/reference.md). The Ultralytics API comparison is in
-[docs/coverage.md](./docs/coverage.md).
-
 ## Install
 
 ```bash
 python -m pip install ml-pipes-ultralytics
 ```
+
+See the [full installation guide](./docs/installation.md) for environment
+setup and GPU configuration.
+
+## Coverage
+
+The package operator catalog is maintained in
+[docs/reference.md](./docs/reference.md). The Ultralytics API comparison is in
+[docs/coverage.md](./docs/coverage.md).
 
 ## License and Ultralytics terms
 
@@ -87,6 +90,7 @@ pipeline that explicitly owns decoding, batching, and frame scheduling.
 | [`run_object_blurrer.py`](./examples/run_object_blurrer.py) | [Object Blurring](https://docs.ultralytics.com/guides/object-blurring/) | Tracks and blurs COCO `person` detections. |
 | [`run_detection_video.py`](./examples/run_detection_video.py) | [Ultralytics predict mode](https://docs.ultralytics.com/modes/predict/) | Uses an explicit OpenCV capture loop and one non-streaming prediction pipeline call per frame. |
 | [`run_track_objects.py`](./examples/run_track_objects.py) | [Ultralytics track mode](https://docs.ultralytics.com/modes/track/) | Preserves native tracker state and draws native tracking IDs plus explicit motion traces. |
+| [`run_batch_predict.py`](./examples/run_batch_predict.py) | [Ultralytics predict mode](https://docs.ultralytics.com/modes/predict/) | Processes a local image archive with single-image prediction, batching, or batched inference with concurrent image decoding. |
 
 </details>
 

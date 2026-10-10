@@ -12,15 +12,19 @@ prediction, embedding, tracking, and result operations as composable
 Ultralytics models and `Results` stay intact, while inference configuration and
 pipeline data flow are explicit.
 
+## Installation
+
 Install from PyPI in a Python 3.10+ environment:
 
 ```bash
 python -m pip install ml-pipes-ultralytics
 ```
 
-The package installs `ml-pipes-core`, `ml-pipes-vision`, and Ultralytics. See
-the [Reference](reference.md) for the public operator surface and
-[Coverage](coverage.md) for the native Ultralytics API comparison.
+The package installs `ml-pipes-core`, `ml-pipes-vision`, and Ultralytics.
+For environment setup and GPU configuration, see the
+[full installation guide](installation.md).
+
+## Quick Start
 
 Start with the runnable [examples](https://github.com/trained-by-humans/ml-pipes-ultralytics/tree/main/examples):
 
@@ -58,3 +62,4 @@ use.
 | [`run_object_blurrer.py`](tutorials/object_blurrer.md) | [Object Blurring](https://docs.ultralytics.com/guides/object-blurring/) | Tracks and blurs COCO `person` detections. |
 | [`run_detection_video.py`](tutorials/detection_video.md) | [Ultralytics predict mode](https://docs.ultralytics.com/modes/predict/) | Uses an explicit OpenCV capture loop and one non-streaming prediction pipeline call per frame. |
 | [`run_track_objects.py`](tutorials/track_objects.md) | [Ultralytics track mode](https://docs.ultralytics.com/modes/track/) | Preserves native tracker state and draws native tracking IDs plus explicit motion traces. |
+| [`run_batch_predict.py`](tutorials/batch_inference.md) | [Ultralytics predict mode](https://docs.ultralytics.com/modes/predict/) | Processes a local image archive with single-image prediction, batching, or batched inference with concurrent image decoding. |
