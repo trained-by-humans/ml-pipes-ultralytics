@@ -5,11 +5,21 @@ build-backend = "hatchling.build"
 [project]
 name = "ml-pipes-ultralytics"
 version = "0.1.2rc1"
-description = "Ultralytics YOLO operators for ml-pipes"
+description = "Compose YOLO-powered pipelines with ml-pipes, using Ultralytics operators for prediction, embeddings, tracking, and result processing."
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE.txt"]
-keywords = ["computer-vision", "ml-pipes", "ultralytics", "yolo"]
+keywords = [
+    "computer-vision",
+    "embeddings",
+    "ml-pipes",
+    "object-detection",
+    "pipeline-composition",
+    "pipelines",
+    "tracking",
+    "ultralytics",
+    "yolo",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
