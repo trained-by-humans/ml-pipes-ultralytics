@@ -5,6 +5,7 @@ repo_name: ml-pipes-ultralytics
 
 theme:
   name: pixel-lab
+  favicon: assets/favicon.svg
   footer_text: Build explicit ML pipelines
   header_background: "linear-gradient(105deg, #111F68 0%, #042AFF 45%, #76FFD6 100%)"
   accent_color: "#09DBF0"
