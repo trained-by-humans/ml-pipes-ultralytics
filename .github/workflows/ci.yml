@@ -40,7 +40,7 @@ jobs:
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   test:
-    name: Test Python ${{ matrix.python-version }} / ${{ matrix.ultralytics-profile }} Ultralytics ${{ matrix.ultralytics-version }}
+    name: "Test: Python ${{ matrix.python-version }} | Ultralytics ${{ matrix.ultralytics-version }} (${{ matrix.ultralytics-profile == 'lowest' && 'min' || matrix.ultralytics-profile == 'highest' && 'latest' || 'min/latest' }})"
     needs: dependency-matrix
     runs-on: ubuntu-latest
     strategy:
