@@ -12,10 +12,19 @@ prediction, embedding, tracking, and result operations as composable
 Ultralytics models and `Results` stay intact, while inference configuration and
 pipeline data flow are explicit.
 
-Follow [Installation](installation.md) to set up a Python 3.10+ environment
-with `ml-pipes-core`, `ml-pipes-vision`, and Ultralytics. See the
-[Reference](reference.md) for the public operator surface and
-[Coverage](coverage.md) for the native Ultralytics API comparison.
+## Installation
+
+Install from PyPI in a Python 3.10+ environment:
+
+```bash
+python -m pip install ml-pipes-ultralytics
+```
+
+The package installs `ml-pipes-core`, `ml-pipes-vision`, and Ultralytics.
+For environment setup and GPU configuration, see the
+[full installation guide](installation.md).
+
+## Quick Start
 
 Start with the runnable [examples](https://github.com/trained-by-humans/ml-pipes-ultralytics/tree/main/examples):
 
