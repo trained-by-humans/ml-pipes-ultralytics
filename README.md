@@ -23,17 +23,20 @@
 > For contributions, issues, and project decisions, use this repository's
 > maintainers and issue tracker.
 
-## Coverage
-
-The package operator catalog is maintained in
-[docs/reference.md](./docs/reference.md). The Ultralytics API comparison is in
-[docs/coverage.md](./docs/coverage.md).
-
 ## Install
 
 ```bash
 python -m pip install ml-pipes-ultralytics
 ```
+
+See the [full installation guide](./docs/installation.md) for environment
+setup and GPU configuration.
+
+## Coverage
+
+The package operator catalog is maintained in
+[docs/reference.md](./docs/reference.md). The Ultralytics API comparison is in
+[docs/coverage.md](./docs/coverage.md).
 
 ## License and Ultralytics terms
 
