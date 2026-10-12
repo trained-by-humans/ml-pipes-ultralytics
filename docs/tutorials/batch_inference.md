@@ -6,10 +6,9 @@ description: >-
 
 # Process Multiple Images efficiently with YOLO
 
-Suppose you have a folder of images and want to detect objects—people, vehicles, animals,
-and more—in every image. Running YOLO on each image individually is straightforward,
-but processing images in batches can reduce the number of model calls and improve throughput.
-Concurrent image loading can further reduce the time spent preparing inputs.
+Running YOLO on each image in a folder is straightforward, but batching can
+reduce model calls and improve throughput. Concurrent loading and decoding can
+further reduce input preparation time.
 
 This tutorial walks through three approaches using 100 local images:
 single-image prediction, batched inference, and batch inference with concurrent image decoding.
@@ -27,10 +26,8 @@ Creating the prediction operator may download its model checkpoint.
 the next section to your own directory instead.
 
 For a small public archive, use [COCO128](https://docs.ultralytics.com/datasets/detect/coco128/),
-Ultralytics' approximately 7 MB subset of COCO train2017. Download that archive
-and copy 100 distinct JPEGs into a local directory. The other images and
-training labels are not extracted; this is an inference example, not a
-training dataset setup.
+Ultralytics' approximately 7 MB subset of COCO train2017. Download the archive
+and copy 100 distinct JPEGs into a local directory.
 
 Run from the repository root:
 
@@ -77,8 +74,7 @@ print(f"Processing {len(sources)} local images")
 ```
 
 For the supplied sample, that is 100 JPEG files. Change the glob to match
-your own archive's image format. There is no directory watcher,
-export system, or manifest: the archive is just a small list of local paths.
+your own archive's image format.
 
 ## Process images one by one
 
@@ -107,9 +103,7 @@ for source in sources:
     print(f"{source.name}: {result.verbose().strip()}")
 ```
 
-Each call loads one file and predicts on one image. For 100 files, the
-pipeline makes 100 model calls. An image with no detections still has a
-result; `verbose()` produces a readable summary rather than a search index.
+Each call loads and predicts on one image: 100 files need 100 model calls.
 
 ## Process several images at once
 
@@ -200,6 +194,40 @@ work to YOLO.
 > `--workers` controls concurrent image loading and decoding in the runnable
 > example below (`Scatter(max_concurrency=...)` in the pipeline). Adjust it
 > when running multiple inference instances to avoid oversubscribing CPU resources.
+
+## Measured performance
+
+The MPS run processes **1,000 distinct COCO val2017 JPEGs**; the
+[published CPU and CUDA runs](https://github.com/Tenkei/model-scaffolding-bench/tree/bd424c95db6aeae0be50715584f6b3086e537a68/results)
+use eight copies of one sample image. All batched modes use eight images per
+call, with native decoding as the baseline.
+
+=== "CPU"
+
+    | Approach | Mean batch time | Images/second | Speedup vs. native batch |
+    |---|---:|---:|---:|
+    | Batch with native decode | 228.80 ms | 34.96 | 1.00× |
+    | Batch with concurrent decode | 196.77 ms | 40.66 | 1.16× |
+
+=== "MPS"
+
+    | Approach | Median archive time | Images/second | Speedup vs. native batch |
+    |---|---:|---:|---:|
+    | Single-image prediction | 17.334 s | 57.69 | 0.60× |
+    | Batch with native decode | 10.409 s | 96.07 | 1.00× |
+    | Batch with concurrent decode | 8.607 s | 116.19 | 1.21× |
+
+=== "GPU (CUDA)"
+
+    | Approach | Mean batch time | Images/second | Speedup vs. native batch |
+    |---|---:|---:|---:|
+    | Batch with native decode | 65.95 ms | 121.31 | 1.00× |
+    | Batch with concurrent decode | 32.37 ms | 247.13 | 2.04× |
+
+These tabs are not a direct CPU/GPU/MPS hardware comparison. They illustrate
+why concurrency matters alongside batching: concurrent image preparation can
+improve throughput even when inference is already batched. The gains reflect
+the complete loading and decoding paths, not worker count alone.
 
 ## Apply the same input flow to other YOLO operations
 
@@ -292,10 +320,6 @@ model, not an exported backend.
 
 YOLO owns task-specific preprocessing; the loading pipeline does not resize
 images or impose a shared tensor shape.
-
-The end result is still the original archive task: one output associated with
-each local image. Batching and concurrent preparation are ways to finish that
-task sooner, not a separate file-processing system.
 
 ## Run the example
 
