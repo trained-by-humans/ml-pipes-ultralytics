@@ -6,7 +6,7 @@
   <a href="https://pypi.org/project/ml-pipes-ultralytics/"><img src="https://img.shields.io/pypi/v/ml-pipes-ultralytics?style=flat-square&amp;logo=pypi&amp;logoColor=white&amp;label=PyPI&amp;color=C48800" alt="Latest PyPI release"></a>
   <a href="https://pypi.org/project/ml-pipes-ultralytics/"><img src="https://img.shields.io/badge/Python-3.10%2B-2377C8?style=flat-square&amp;logo=python&amp;logoColor=white" alt="Python 3.10 or newer"></a>
   <a href="https://github.com/trained-by-humans/ml-pipes-ultralytics/blob/main/LICENSE.txt"><img src="https://img.shields.io/pypi/l/ml-pipes-ultralytics?style=flat-square&amp;label=License&amp;color=287C35" alt="Apache 2.0 license"></a>
-  <a href="docs/coverage.md"><img src="https://img.shields.io/badge/Ultralytics-8.4.143-0B23A9?style=flat-square" alt="Ultralytics 8.4.143 API coverage"></a>
+  <a href="docs/coverage.md"><img src="https://img.shields.io/badge/Ultralytics-8.4.174-0B23A9?style=flat-square" alt="Ultralytics 8.4.174 API coverage"></a>
 </p>
 
 <p align="center">
