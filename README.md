@@ -38,7 +38,7 @@ The package operator catalog is maintained in
 [docs/reference.md](./docs/reference.md). The Ultralytics API comparison is in
 [docs/coverage.md](./docs/coverage.md).
 
-## License and Ultralytics terms
+## License and terms
 
 `ml-pipes-ultralytics` is licensed under the [Apache License 2.0](./LICENSE.txt).
 It requires [Ultralytics](https://github.com/ultralytics/ultralytics), which is
@@ -78,6 +78,16 @@ source types—paths, URLs, camera sources, in-memory images, tensors, and
 batches—but do not support `stream=True`. For videos or large datasets, use a
 pipeline that explicitly owns decoding, batching, and frame scheduling.
 
+## Documentation
+
+Want to learn how to use Ultralytics with `ml-pipes`? Explore our
+[documentation](https://ultralytics.ml-pipes.com/),
+[how-to guides](https://ultralytics.ml-pipes.com/tutorials/detect_and_crop/),
+and [end-to-end examples](./examples/)!
+
+For additional YOLO examples and broader computer-vision use cases, see
+[ml-pipes-supervision](https://github.com/trained-by-humans/ml-pipes-supervision).
+
 ## Built with Ultralytics x ml-pipes
 
 <details>
@@ -93,6 +103,3 @@ pipeline that explicitly owns decoding, batching, and frame scheduling.
 | [`run_batch_predict.py`](./examples/run_batch_predict.py) | [Ultralytics predict mode](https://docs.ultralytics.com/modes/predict/) | Processes a local image archive with single-image prediction, batching, or batched inference with concurrent image decoding. |
 
 </details>
-
-For additional YOLO examples and broader computer-vision use cases, see
-[ml-pipes-supervision](https://github.com/trained-by-humans/ml-pipes-supervision).
