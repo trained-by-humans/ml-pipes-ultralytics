@@ -38,8 +38,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://trained-by-humans.github.io/ml-pipes-ultralytics/"
-Documentation = "https://trained-by-humans.github.io/ml-pipes-ultralytics/"
+Homepage = "https://ultralytics.ml-pipes.com/"
+Documentation = "https://ultralytics.ml-pipes.com/"
 Repository = "https://github.com/trained-by-humans/ml-pipes-ultralytics"
 Issues = "https://github.com/trained-by-humans/ml-pipes-ultralytics/issues"
 Changelog = "https://github.com/trained-by-humans/ml-pipes-ultralytics/releases"
