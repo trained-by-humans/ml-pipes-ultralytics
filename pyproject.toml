@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ml-pipes-ultralytics"
-version = "0.1.2rc1"
+version = "0.1.3"
 description = "Compose YOLO-powered pipelines with ml-pipes, using Ultralytics operators for prediction, embeddings, tracking, and result processing."
 readme = "README.md"
 license = "Apache-2.0"
