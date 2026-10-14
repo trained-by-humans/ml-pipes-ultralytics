@@ -101,5 +101,6 @@ For additional YOLO examples and broader computer-vision use cases, see
 | [`run_detection_video.py`](./examples/run_detection_video.py) | [Ultralytics predict mode](https://docs.ultralytics.com/modes/predict/) | Uses an explicit OpenCV capture loop and one non-streaming prediction pipeline call per frame. |
 | [`run_track_objects.py`](./examples/run_track_objects.py) | [Ultralytics track mode](https://docs.ultralytics.com/modes/track/) | Preserves native tracker state and draws native tracking IDs plus explicit motion traces. |
 | [`run_batch_predict.py`](./examples/run_batch_predict.py) | [Ultralytics predict mode](https://docs.ultralytics.com/modes/predict/) | Processes a local image archive with single-image prediction, batching, or batched inference with concurrent image decoding. |
+| [`run_image_similarity.py`](./examples/run_image_similarity.py) | [YOLO image embeddings](https://docs.ultralytics.com/reference/engine/model/#ultralytics.engine.model.Model.embed) | Compares two bus photos or an image and its horizontal flip, returning cosine similarity. |
 
 </details>

@@ -70,6 +70,7 @@ nav:
   - Learn:
       - Detect and Crop: tutorials/detect_and_crop.md
       - Segment and Annotate: tutorials/segment_and_annotate.md
+      - Image Embedding: tutorials/image_similarity.md
       - Blur People: tutorials/object_blurrer.md
       - Detect Objects on Video: tutorials/detection_video.md
       - Track Objects on Video: tutorials/track_objects.md
