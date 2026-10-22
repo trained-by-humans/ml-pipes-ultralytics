@@ -11,6 +11,9 @@ is useful for privacy-preserving video and image processing. Rather than hiding
 the workflow in a solution class, this tutorial exposes the custom blur step as
 one small operator between native tracking and rendering.
 
+Before you begin, follow the [Installation](../installation.md) instructions.
+Run the Python snippets in order in the same script or notebook.
+
 | Before | After |
 |---|---|
 | ![Input bus image](../assets/bus.jpg) | ![Person-only blur result](../assets/object_blurrer/blurred.jpg) |
@@ -61,6 +64,10 @@ cv2.imwrite("blurred.jpg", blurred)
 ```
 
 ## Run the example
+
+To run the complete example script instead,
+[clone the repository](../installation.md#get-the-tutorial-files), then run
+these commands from its root directory:
 
 ```bash
 python examples/run_object_blurrer.py

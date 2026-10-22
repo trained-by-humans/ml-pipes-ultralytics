@@ -11,6 +11,9 @@ stable IDs across frames. This pipeline makes the state explicit: the native
 tracker belongs to `yolo.Track(persist=True)`, and the application-level trace
 history belongs to a custom `TrackTrace` operator.
 
+Before you begin, follow the [Installation](../installation.md) instructions.
+Run the Python snippets in order in the same script or notebook.
+
 ![Tracked objects and motion traces](../assets/track_objects/tracked-frame.jpg)
 
 ## Build the frame pipeline
@@ -70,6 +73,10 @@ cap.release()
 ```
 
 ## Run the example
+
+To run the complete example script instead,
+[clone the repository](../installation.md#get-the-tutorial-files), then run
+these commands from its root directory:
 
 ```bash
 python examples/run_track_objects.py --input people-walking.mp4 --show

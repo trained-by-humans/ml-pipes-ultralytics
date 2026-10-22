@@ -11,6 +11,9 @@ adds a mask to every detected instance. This pipeline keeps the native result
 intact until the final plotting step, where Ultralytics renders masks, boxes,
 labels, and confidence values.
 
+Before you begin, follow the [Installation](../installation.md) instructions.
+Run the Python snippets in order in the same script or notebook.
+
 | Before | After |
 |---|---|
 | ![Input bus image](../assets/bus.jpg) | ![Instance-coloured segmentation](../assets/segment_and_annotate/segmented.jpg) |
@@ -59,6 +62,10 @@ cv2.imwrite("segmented-copy.jpg", annotated)
 ```
 
 ## Run the example
+
+To run the complete example script instead,
+[clone the repository](../installation.md#get-the-tutorial-files), then run
+these commands from its root directory:
 
 ```bash
 python examples/run_segment_and_annotate.py
