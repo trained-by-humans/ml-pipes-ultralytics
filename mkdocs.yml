@@ -69,6 +69,7 @@ nav:
   - Installation: installation.md
   - Learn:
       - Detect and Crop: tutorials/detect_and_crop.md
+      - Detect and Classify: tutorials/detect_and_classify.md
       - Segment and Annotate: tutorials/segment_and_annotate.md
       - Image Embedding: tutorials/image_similarity.md
       - Blur People: tutorials/object_blurrer.md
