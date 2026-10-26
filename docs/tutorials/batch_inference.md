@@ -29,7 +29,7 @@ For a small public archive, use [COCO128](https://docs.ultralytics.com/datasets/
 Ultralytics' approximately 7 MB subset of COCO train2017. Download the archive
 and copy 100 distinct JPEGs into a local directory.
 
-Run from the repository root:
+Download the images into a local directory:
 
 ```python
 from io import BytesIO
@@ -323,8 +323,12 @@ images or impose a shared tensor shape.
 
 ## Run the example
 
-Run from the repository root. With no `--source`, the example downloads the
-same 100 COCO128 images prepared above on its first run, then reuses them.
+To run the complete example script instead,
+[clone the repository](../installation.md#get-the-tutorial-files), then run
+the following command from its root directory.
+
+With no `--source`, the example downloads the same 100 COCO128 images prepared
+above on its first run, then reuses them.
 It prints each image's prediction summary; it does not save or modify images.
 
 ```bash

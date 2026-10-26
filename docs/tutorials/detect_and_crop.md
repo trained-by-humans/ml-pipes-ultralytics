@@ -10,6 +10,9 @@ description: >-
 detects objects and writes each bounding-box crop to disk. This tutorial makes
 the inference, crop side effect, and final rendering explicit pipeline steps.
 
+Before you begin, follow the [Installation](../installation.md) instructions.
+Run the Python snippets in order in the same script or notebook.
+
 | Before | After |
 |---|---|
 | ![Input bus image](../assets/bus.jpg) | ![Annotated bus image](../assets/detect_and_crop/annotated.jpg) |
@@ -63,6 +66,10 @@ The `bus` and `person` directories below are produced by the `SaveCrop` step.
 | ![Bus crop](../assets/detect_and_crop/bus.jpg) | ![Person crop](../assets/detect_and_crop/person.jpg) |
 
 ## Run the example
+
+To run the complete example script instead,
+[clone the repository](../installation.md#get-the-tutorial-files), then run
+these commands from its root directory:
 
 ```bash
 python examples/run_detect_and_crop.py

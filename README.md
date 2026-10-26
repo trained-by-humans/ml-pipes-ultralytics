@@ -96,6 +96,7 @@ For additional YOLO examples and broader computer-vision use cases, see
 | Example | Upstream source | Note |
 |---|---|---|
 | [`run_detect_and_crop.py`](./examples/run_detect_and_crop.py) | [Object Cropping](https://docs.ultralytics.com/guides/object-cropping/) | Detects objects, saves native result crops, and renders the annotated image. |
+| [`run_detect_and_classify.py`](./examples/run_detect_and_classify.py) | [Image Classification](https://docs.ultralytics.com/tasks/classify/) | Detects objects, classifies each crop with a second model, and pairs predictions with the original boxes. |
 | [`run_segment_and_annotate.py`](./examples/run_segment_and_annotate.py) | [Instance Segmentation and Tracking](https://docs.ultralytics.com/guides/instance-segmentation-and-tracking/) | Runs segmentation and renders instance-coloured masks. |
 | [`run_object_blurrer.py`](./examples/run_object_blurrer.py) | [Object Blurring](https://docs.ultralytics.com/guides/object-blurring/) | Tracks and blurs COCO `person` detections. |
 | [`run_detection_video.py`](./examples/run_detection_video.py) | [Ultralytics predict mode](https://docs.ultralytics.com/modes/predict/) | Uses an explicit OpenCV capture loop and one non-streaming prediction pipeline call per frame. |

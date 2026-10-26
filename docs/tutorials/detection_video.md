@@ -11,6 +11,9 @@ consume a video directly. In a pipeline, an explicit OpenCV loop instead owns
 decoding, scheduling, display, and output. The pipeline remains a simple,
 non-streaming transformation from one BGR frame to one annotated BGR frame.
 
+Before you begin, follow the [Installation](../installation.md) instructions.
+Run the Python snippets in order in the same script or notebook.
+
 ![Annotated detection frame](../assets/detection_video/annotated-frame.jpg)
 
 ## Build the frame pipeline
@@ -61,6 +64,10 @@ cap.release()
 ```
 
 ## Run the example
+
+To run the complete example script instead,
+[clone the repository](../installation.md#get-the-tutorial-files), then run
+these commands from its root directory:
 
 ```bash
 python examples/run_detection_video.py --input people-walking.mp4 --show
