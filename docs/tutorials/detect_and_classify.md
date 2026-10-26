@@ -6,15 +6,19 @@ description: >-
 
 # Detect and Classify
 
-Combine object detection with
-[image classification](https://docs.ultralytics.com/tasks/classify/)
-to assign more specific labels to individual objects. Start with a detection
-pipeline, add bounding-box crops, then classify each crop with a second model.
-Each prediction stays paired with its original detection.
+Detect and classify is a common multi-model workflow. Object detection
+localizes the targets in an image, then
+[image classification](https://www.ultralytics.com/glossary/image-classification)
+categorizes each target using its cropped region. Together, these stages
+assign more specific labels to individual objects. This tutorial builds the
+workflow step by step, keeping each prediction paired with its original
+detection.
 
-This tutorial uses dog breed classification as a worked example. The same
-pipeline structure applies to other object categories and classification
-tasks with suitable checkpoints and class selections.
+This tutorial uses dog breed classification as a worked example. The
+COCO-trained YOLO detector has a single `dog` class, while the ImageNet-trained
+YOLO classifier distinguishes 118 domestic dog breed classes ([ImageNet class list](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/datasets/ImageNet.yaml)). The same pipeline structure
+applies to other object categories and classification tasks with suitable
+checkpoints and class selections.
 
 Before you begin, follow the [Installation](../installation.md) instructions.
 Run the Python snippets in order in the same script or notebook.
@@ -25,9 +29,8 @@ Run the Python snippets in order in the same script or notebook.
 
 ## Detect objects
 
-Begin with `yolo.Predict` and `Select(0)`. The prediction operator returns a
-native `list[Results]`; selecting its first item gives us the result for this
-single image. Highlighted lines show the operators introduced at each stage.
+The first step is to localize the targets we want to classify. Here we are using YOLO in
+detection mode (`yolo26n.pt` checkpoint) to find objects and their bounding boxes.
 
 ```python
 from ml_pipes.core import Pipeline
@@ -50,31 +53,26 @@ The detector returns object categories and boxes. In this sample it finds
 all eight dogs, but its `dog` label does not identify a breed. The next stage
 selects the category we want to classify.
 
-## Crop selected detections
+## Filter detections
 
-Keep the detection operators and append `FilterResults` and
-`CropResults`. The filter selects an exact detector label: `dog` in
-this example. Return a plain `(detections, crops)` tuple: native `Results`
-retain the boxes, class IDs, and detection scores, and the BGR crops follow
-the same order. No additional data container or package is needed.
+Both detection and classification process an entire input image. In this
+pipeline, however, we run classification separately for each detection.
+Filtering out unwanted objects avoids unnecessary classifier calls, saving
+time and resources.
 
-First define the filter and crop operators:
+For dog breed classification, we keep only detections labeled `dog`.
 
-```python
-import warnings
-
+```python hl_lines="33"
 import numpy as np
-import numpy.typing as npt
 from ultralytics.engine.results import Results
-from ultralytics.utils.plotting import save_one_box
 
 from ml_pipes.operator import Operator
-
-ImageArray = npt.NDArray[np.uint8]
 
 
 @Operator
 class FilterResults:
+    """Keep exact class-name matches as a native Results object."""
+
     def __init__(self, class_name: str) -> None:
         self.class_name = class_name
 
@@ -93,8 +91,42 @@ class FilterResults:
         return result[indices]
 
 
+pipeline = Pipeline(
+    [
+        yolo.Predict(model="yolo26n.pt", conf=0.25, iou=0.7, imgsz=960),
+        Select(0),
+        FilterResults("dog"),
+    ],
+    auto_validate=True,
+)
+```
+
+## Crop selected detections
+
+A classifier assigns categories to the image it receives. A crop gives it a
+focused view of one target, instead of a scene containing several objects
+and background.
+
+A small amount of padding can preserve details near the box edges and some
+surrounding context when a detection box is too tight.
+
+The current example uses `gain=1.0` and `pad=0`, so it adds no padding. Increase these when your
+targets need more context, but keep padding small when detections are
+densely packed to avoid including neighboring objects in the crop.
+
+```python hl_lines="42"
+import warnings
+
+import numpy.typing as npt
+from ultralytics.utils.plotting import save_one_box
+
+ImageArray = npt.NDArray[np.uint8]
+
+
 @Operator
 class CropResults:
+    """Return aligned detections and in-memory crops using Ultralytics."""
+
     def __init__(self, *, save: bool = False, BGR: bool = True, gain: float = 1.0, pad: int = 0) -> None:
         self.save = save
         self.BGR = BGR
@@ -117,17 +149,8 @@ class CropResults:
             indices.append(index)
             crops.append(crop.copy())
         return result[indices], crops
-```
 
-`save_one_box` handles crop coordinates and clipping. `save=False` keeps the
-crops in memory, `BGR=True` matches the classifier's input, and `gain=1.0,
-pad=0` disables the helper's default box expansion. The operator skips invalid
-or empty crops together with their detections, preserving alignment. The
-original box coordinates and image remain unchanged.
 
-Now extend the same pipeline. Only the highlighted operators are new:
-
-```python hl_lines="5 6"
 pipeline = Pipeline(
     [
         yolo.Predict(model="yolo26n.pt", conf=0.25, iou=0.7, imgsz=960),
@@ -139,29 +162,22 @@ pipeline = Pipeline(
 )
 ```
 
-The pipeline now returns `(detections, crops)` instead of one `Results`.
 These are the eight crops, arranged left to right; their numbers identify
 the detections, not their position in the image.
 
 ![Eight individual dog crops, numbered to match their detections](../assets/detect_and_classify/crops.jpg)
 
-## Classify each crop
+## Classify objects
 
-Keep all four existing operators and append a per-crop classification branch.
-Classifying the whole image once would give one set of predictions for the
-scene; running the second model on each crop gives a set for each object.
+Use a second model to assign a more specific category to each selected object.
+[Scatter/Gather](https://ml-pipes.com/regions/#scatter-gather) applies the
+classifier to each crop and collects the predictions in the same order,
+keeping them aligned with the detections.
 
-```python
-from ml_pipes.standard import Gather, Pick, Recall, Scatter, Store
-```
+```python hl_lines="10-15"
+from ml_pipes.standard import Gather, Pick, Scatter, Store
 
-`Store("detections", source=0)` saves the first tuple item, then `Pick(1)`
-passes only the crop list onward. `Scatter` runs the classifier on each crop;
-`Gather` collects its native `Results` in crop order. Finally, `Recall` brings
-back the detections as `(detections, classifications)`. The two collections
-stay aligned without a custom class to hold them together.
 
-```python hl_lines="7-13"
 pipeline = Pipeline(
     [
         yolo.Predict(model="yolo26n.pt", conf=0.25, iou=0.7, imgsz=960),
@@ -169,66 +185,43 @@ pipeline = Pipeline(
         FilterResults("dog"),
         CropResults(),
         Store("detections", source=0),
-        Pick(1),
+        Pick(1),  # Pass only the crops to the classifier.
         Scatter(max_concurrency=1),
         yolo.Predict(model="yolo26n-cls.pt", imgsz=224),
         Select(0),
         Gather(),
-        Recall("detections", prepend=True),
     ],
     auto_validate=True,
 )
 ```
 
-Each snippet builds the next version of the pipeline. In an application,
-build the final version once and reuse it for subsequent images, so its two
-models are reused across calls. `max_concurrency=1` avoids simultaneous calls
-to the shared classifier. If no matching objects are found, the classifier
-is not called and both collections are empty.
+## Bonus: Filter classification classes
 
-## Show predictions
+A general-purpose classifier can predict many categories unrelated to your
+task. Filter its output to consider only the classes you want. Here we keep
+ImageNet domestic dog breed IDs `151` through `268`, excluding wild canids
+([ImageNet class mapping](https://github.com/ultralytics/ultralytics/blob/v8.4.174/ultralytics/cfg/datasets/ImageNet.yaml)).
 
-Display the highest-scoring class. When that score is **below 50%**, also show
-the second class as `first / second`. This threshold applies to classification
-scores, not detection confidence; exactly 50% shows only the first class.
+This selects candidate labels after inference, not a different model. Keep
+the original scores without renormalizing: restricting the label set does
+not make the classifier more certain. Omit `FilterClasses` or pass `None`
+to consider all classes instead.
 
-The stock `yolo26n-cls.pt` checkpoint uses ImageNet classes. Choose candidate
-IDs that match your task, or pass `None` to `LabelDetections` to rank all
-classes. For this example, domestic dog breeds occupy IDs `151` through `268`,
-inclusive, excluding wild canids. These are classifier IDs, not COCO detector
-IDs. See the [ImageNet class mapping](https://github.com/ultralytics/ultralytics/blob/v8.4.174/ultralytics/cfg/datasets/ImageNet.yaml).
-
-Rank candidates across the full probability vector, not just the model's
-global top five, and keep the original scores without renormalizing:
-
-```python
-from ml_pipes.ultralytics import results
-
+```python hl_lines="41"
 # Candidate classes for this example: ImageNet domestic dog breeds.
 CLASSIFICATION_CLASSES = tuple(range(151, 269))
 
 
 @Operator
-class LabelDetections:
+class FilterClasses:
+    """Keep candidate classification classes with their original scores."""
+
     def __init__(self, class_ids: tuple[int, ...] | None = None) -> None:
         if class_ids is not None and not class_ids:
             raise ValueError("Select at least one classification class ID.")
         self.class_ids = class_ids
 
-    def __call__(self, detections: Results, classifications: list[Results]) -> Results:
-        if len(detections.boxes) != len(classifications):
-            raise ValueError("Each detection must have one classification result.")
-        boxes = detections.boxes.cpu().numpy().data[:, [0, 1, 2, 3, -2, -1]].copy()
-        boxes[:, -1] = np.arange(len(boxes))
-        labeled = detections.new()
-        labeled.names = {
-            index: self._classification_label(self._top_predictions(result))
-            for index, result in enumerate(classifications)
-        }
-        labeled.update(boxes=boxes)
-        return labeled
-
-    def _top_predictions(self, result: Results) -> list[tuple[int, str, float]]:
+    def __call__(self, result: Results) -> Results:
         if result.probs is None:
             raise ValueError("Classifier returned no probabilities; use a classification (-cls) checkpoint.")
         class_ids = tuple(result.names) if self.class_ids is None else self.class_ids
@@ -237,34 +230,13 @@ class LabelDetections:
             for class_id in class_ids
         ):
             raise ValueError("Classifier lacks the requested class IDs; choose IDs that match its checkpoint.")
-        candidates = [
-            (class_id, result.names[class_id], float(result.probs.data[class_id].item()))
-            for class_id in class_ids
-        ]
-        return sorted(candidates, key=lambda value: value[2], reverse=True)[:5]
+        filtered = result.new()
+        # Native classification IDs index the score vector, so remap names too.
+        filtered.names = {index: result.names[class_id] for index, class_id in enumerate(class_ids)}
+        filtered.update(probs=result.probs.data[list(class_ids)])
+        return filtered
 
-    @staticmethod
-    def _classification_label(predictions: list[tuple[int, str, float]]) -> str:
-        count = 2 if predictions[0][2] < 0.5 else 1
-        return " / ".join(label.replace('_', ' ') for _, label, _ in predictions[:count])
-```
 
-ml-pipes unpacks `(detections, classifications)` into the operator's two
-arguments automatically.
-
-Native `results.Plot` reads each label from `Results.names[box.cls]`. Replacing
-the detector's `dog` name alone would give every dog the same breed. Instead,
-`LabelDetections` creates a display-only result with one label ID per box.
-The original detections and classification results remain unchanged.
-
-Append label generation and plotting to the pipeline. `conf=False` hides
-the detector score; compact image labels show class names, while the original
-scores remain in the classification results. `pil=True` lets us set an explicit
-font size, and `save=True` writes the annotation directly to `annotated.jpg`.
-The display result still holds the full image in `orig_img`, so `Plot` needs
-no separate image storage or restoration:
-
-```python hl_lines="14-18"
 pipeline = Pipeline(
     [
         yolo.Predict(model="yolo26n.pt", conf=0.25, iou=0.7, imgsz=960),
@@ -272,13 +244,73 @@ pipeline = Pipeline(
         FilterResults("dog"),
         CropResults(),
         Store("detections", source=0),
-        Pick(1),
+        Pick(1),  # Pass only the crops to the classifier.
         Scatter(max_concurrency=1),
         yolo.Predict(model="yolo26n-cls.pt", imgsz=224),
         Select(0),
+        FilterClasses(CLASSIFICATION_CLASSES),
+        Gather(),
+    ],
+    auto_validate=True,
+)
+```
+
+## Show predictions
+
+Bring back the detections to label each object on the original image with
+its highest-scoring classification. When that score is **below 50%**, also
+show the second class as `first / second` to make uncertainty visible.
+These are classification scores, not detection confidence.
+
+The pipeline draws the labels on the original image and saves the result
+to `annotated.jpg`:
+
+```python hl_lines="44-49"
+from ml_pipes.standard import Recall
+from ml_pipes.ultralytics import results
+
+
+@Operator
+class LabelDetections:
+    """Build a display-only Results with a different classification label per box."""
+
+    def __call__(self, detections: Results, classifications: list[Results]) -> Results:
+        if len(detections.boxes) != len(classifications):
+            raise ValueError("Each detection must have one classification result.")
+        # Native Plot looks up names[box.cls]. Give every box its own display ID;
+        # changing names[dog_id] alone would give all dogs the same breed label.
+        boxes = detections.boxes.cpu().numpy().data[:, [0, 1, 2, 3, -2, -1]].copy()
+        boxes[:, -1] = np.arange(len(boxes))
+        labeled = detections.new()
+        labeled.names = {
+            index: self._classification_label(result)
+            for index, result in enumerate(classifications)
+        }
+        labeled.update(boxes=boxes)
+        return labeled
+
+    @staticmethod
+    def _classification_label(result: Results) -> str:
+        """Show a runner-up only when the highest classification score is below 50%."""
+        count = 2 if float(result.probs.top1conf) < 0.5 else 1
+        return " / ".join(result.names[class_id].replace('_', ' ') for class_id in result.probs.top5[:count])
+
+
+pipeline = Pipeline(
+    [
+        yolo.Predict(model="yolo26n.pt", conf=0.25, iou=0.7, imgsz=960),
+        Select(0),
+        FilterResults("dog"),
+        CropResults(),
+        Store("detections", source=0),
+        Pick(1),  # Pass only the crops to the classifier.
+        Scatter(max_concurrency=1),
+        yolo.Predict(model="yolo26n-cls.pt", imgsz=224),
+        Select(0),
+        FilterClasses(CLASSIFICATION_CLASSES),
         Gather(),
         Recall("detections", prepend=True),
-        LabelDetections(CLASSIFICATION_CLASSES),
+        LabelDetections(),
         results.Plot(
             conf=False, line_width=2, pil=True, font_size=18,
             save=True, filename="annotated.jpg",

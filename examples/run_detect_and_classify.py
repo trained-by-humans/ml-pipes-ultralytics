@@ -91,13 +91,33 @@ class CropResults:
 
 
 @Operator
-class LabelDetections:
-    """Build a display-only Results with a different classification label per box."""
+class FilterClasses:
+    """Keep candidate classification classes with their original scores."""
 
     def __init__(self, class_ids: tuple[int, ...] | None = None) -> None:
         if class_ids is not None and not class_ids:
             raise ValueError("Select at least one classification class ID.")
         self.class_ids = class_ids
+
+    def __call__(self, result: Results) -> Results:
+        if result.probs is None:
+            raise ValueError("Classifier returned no probabilities; use a classification (-cls) checkpoint.")
+        class_ids = tuple(result.names) if self.class_ids is None else self.class_ids
+        if not class_ids or any(
+            class_id not in result.names or not 0 <= class_id < len(result.probs.data)
+            for class_id in class_ids
+        ):
+            raise ValueError("Classifier lacks the requested class IDs; choose IDs that match its checkpoint.")
+        filtered = result.new()
+        # Native classification IDs index the score vector, so remap names too.
+        filtered.names = {index: result.names[class_id] for index, class_id in enumerate(class_ids)}
+        filtered.update(probs=result.probs.data[list(class_ids)])
+        return filtered
+
+
+@Operator
+class LabelDetections:
+    """Build a display-only Results with a different classification label per box."""
 
     def __call__(self, detections: Results, classifications: list[Results]) -> Results:
         if len(detections.boxes) != len(classifications):
@@ -108,33 +128,17 @@ class LabelDetections:
         boxes[:, -1] = np.arange(len(boxes))
         labeled = detections.new()
         labeled.names = {
-            index: self._classification_label(self._top_predictions(result))
+            index: self._classification_label(result)
             for index, result in enumerate(classifications)
         }
         labeled.update(boxes=boxes)
         return labeled
 
-    def _top_predictions(self, result: Results) -> list[tuple[int, str, float]]:
-        """Rank candidates without changing the classifier's original probabilities."""
-        if result.probs is None:
-            raise ValueError("Classifier returned no probabilities; use a classification (-cls) checkpoint.")
-        class_ids = tuple(result.names) if self.class_ids is None else self.class_ids
-        if not class_ids or any(
-            class_id not in result.names or not 0 <= class_id < len(result.probs.data)
-            for class_id in class_ids
-        ):
-            raise ValueError("Classifier lacks the requested class IDs; choose IDs that match its checkpoint.")
-        candidates = [
-            (class_id, result.names[class_id], float(result.probs.data[class_id].item()))
-            for class_id in class_ids
-        ]
-        return sorted(candidates, key=lambda value: value[2], reverse=True)[:5]
-
     @staticmethod
-    def _classification_label(predictions: list[tuple[int, str, float]]) -> str:
+    def _classification_label(result: Results) -> str:
         """Show a runner-up only when the highest classification score is below 50%."""
-        count = 2 if predictions[0][2] < 0.5 else 1
-        return " / ".join(label.replace('_', ' ') for _, label, _ in predictions[:count])
+        count = 2 if float(result.probs.top1conf) < 0.5 else 1
+        return " / ".join(result.names[class_id].replace('_', ' ') for class_id in result.probs.top5[:count])
 
 
 def build_pipeline(
@@ -159,13 +163,14 @@ def build_pipeline(
             FilterResults(class_name),
             CropResults(),
             Store("detections", source=0),
-            Pick(1),
+            Pick(1),  # Pass only the crops to the classifier.
             Scatter(max_concurrency=1),
             yolo.Predict(model=cls_model, imgsz=cls_imgsz, device=device),
             Select(0),
+            FilterClasses(classification_classes),
             Gather(),
             Recall("detections", prepend=True),
-            LabelDetections(classification_classes),
+            LabelDetections(),
             results.Plot(
                 conf=False, line_width=2, pil=True, font_size=18,
                 show=show, save=True, filename=str(output),

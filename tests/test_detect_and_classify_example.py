@@ -207,8 +207,10 @@ def test_pipeline_classifies_each_crop_and_ranks_only_bears_and_pandas(
     annotated = pipeline(image)
     assert len(classified_inputs) == 1
     detections, classifications = classified_inputs[0]
-    labeler = example.LabelDetections(BEAR_CLASS_IDS)
-    ranked = [labeler._top_predictions(result) for result in classifications]
+    ranked = [
+        [(class_id, result.names[class_id], float(result.probs.data[class_id])) for class_id in result.probs.top5]
+        for result in classifications
+    ]
 
     assert detections.boxes.xyxy.tolist() == [[1, 2, 5, 6], [4, 5, 9, 10]]
     assert detections.boxes.cls.tolist() == [1, 1]
@@ -216,10 +218,10 @@ def test_pipeline_classifies_each_crop_and_ranks_only_bears_and_pandas(
     assert detections.names == DETECTOR_NAMES
     assert [predictions[0][1] for predictions in ranked] == ["giant_panda", "giant_panda"]
     assert [predictions[0][2] for predictions in ranked] == pytest.approx([0.1, 0.7])
-    assert [class_id for class_id, _, _ in ranked[0]] == [2, 4, 0, 5, 6]
+    assert [class_id for class_id, _, _ in ranked[0]] == [BEAR_CLASS_IDS.index(class_id) for class_id in (2, 4, 0, 5, 6)]
     assert [confidence for _, _, confidence in ranked[0]] == pytest.approx([0.1, 0.07, 0.05, 0.03, 0.01])
-    assert all(class_id in BEAR_CLASS_IDS for predictions in ranked for class_id, _, _ in predictions)
-    np.testing.assert_allclose(classifications[0].probs.data, [0.05, 0.6, 0.1, 0.13, 0.07, 0.03, 0.01, 0.01])
+    assert all(label in {CLASSIFIER_NAMES[class_id] for class_id in BEAR_CLASS_IDS} for predictions in ranked for _, label, _ in predictions)
+    np.testing.assert_allclose(classifications[0].probs.data, [0.05, 0.1, 0.07, 0.03, 0.01, 0.01])
     assert np.asarray(annotated).shape == image.shape
     assert classifier.call_count == 2
     assert detector.call_args.kwargs.keys() == {"source", "conf", "iou", "imgsz", "device"}
@@ -343,7 +345,7 @@ def test_wrong_classifier_checkpoint_has_clear_diagnostic(example: ModuleType) -
     image = np.zeros((12, 18, 3), dtype=np.uint8)
     result = detection_result(image, [[1, 2, 5, 6, 0.8, 1]])
     with pytest.raises(ValueError, match=r"no probabilities.*classification \(-cls\) checkpoint"):
-        example.LabelDetections()._top_predictions(result)
+        example.FilterClasses()(result)
 
 
 @pytest.mark.parametrize("label", [
@@ -353,9 +355,13 @@ def test_supported_classes_are_selected_even_outside_global_top1(example: Module
     image = np.zeros((12, 18, 3), dtype=np.uint8)
     result = Results(image, path="crop.jpg", names={0: "gibbon", 1: label, 2: "teddy_bear"}, probs=np.array([0.8, 0.15, 0.05]))
 
-    ranked = example.LabelDetections((1,))._top_predictions(result)
+    filtered = example.FilterClasses((1,))(result)
 
-    assert ranked == [(1, label, 0.15)]
+    assert isinstance(filtered, Results)
+    assert filtered.names == {0: label}
+    assert filtered.probs.top1 == 0
+    assert filtered.probs.top1conf == pytest.approx(0.15)
+    assert result.names == {0: "gibbon", 1: label, 2: "teddy_bear"}
     np.testing.assert_array_equal(result.probs.data, [0.8, 0.15, 0.05])
 
 
@@ -364,22 +370,93 @@ def test_classifier_without_supported_classes_has_clear_diagnostic(example: Modu
     result = Results(image, path="crop.jpg", names={0: "dog", 1: "teddy_bear"}, probs=np.array([0.8, 0.2]))
 
     with pytest.raises(ValueError, match="lacks the requested class IDs"):
-        example.LabelDetections((151,))._top_predictions(result)
+        example.FilterClasses((151,))(result)
 
 
 def test_empty_class_subset_is_rejected(example: ModuleType) -> None:
     with pytest.raises(ValueError, match="at least one classification class ID"):
-        example.LabelDetections(())
+        example.FilterClasses(())
+
+
+@pytest.mark.parametrize("tensor", [False, True])
+def test_class_filter_preserves_scores_and_source_without_renormalizing(example: ModuleType, tensor: bool) -> None:
+    image = np.zeros((12, 18, 3), dtype=np.uint8)
+    scores = np.array([0.8, 0.15, 0.05], dtype=np.float32)
+    if tensor:
+        import torch
+
+        scores = torch.from_numpy(scores)
+    result = Results(image, path="crop.jpg", names={0: "unrelated", 1: "first_breed", 2: "second_breed"}, probs=scores)
+
+    filtered = example.FilterClasses((2, 1))(result)
+
+    assert isinstance(filtered, Results)
+    assert filtered.orig_img is image and filtered.path == result.path
+    assert type(filtered.probs.data) is type(scores)
+    assert filtered.names == {0: "second_breed", 1: "first_breed"}
+    np.testing.assert_allclose(filtered.probs.cpu().numpy().data, [0.05, 0.15])
+    assert filtered.probs.top1 == 1
+    assert example.LabelDetections._classification_label(filtered) == "first breed / second breed"
+    filtered.probs.data[0] = 0
+    filtered.names[0] = "changed"
+    np.testing.assert_allclose(result.probs.cpu().numpy().data, [0.8, 0.15, 0.05])
+    assert result.names == {0: "unrelated", 1: "first_breed", 2: "second_breed"}
+
+
+def test_class_filter_considers_candidates_outside_global_top_five(example: ModuleType) -> None:
+    image = np.zeros((12, 18, 3), dtype=np.uint8)
+    result = Results(
+        image, path="crop.jpg", names={index: f"class_{index}" for index in range(8)},
+        probs=np.array([0.4, 0.2, 0.15, 0.1, 0.07, 0.04, 0.03, 0.01]),
+    )
+
+    filtered = example.FilterClasses((6, 7))(result)
+
+    assert not {6, 7} & set(result.probs.top5)
+    assert filtered.names[filtered.probs.top1] == "class_6"
+    assert filtered.probs.top1conf == pytest.approx(0.03)
+
+
+def test_class_filter_retains_zero_score_candidates(example: ModuleType) -> None:
+    image = np.zeros((12, 18, 3), dtype=np.uint8)
+    result = Results(image, path="crop.jpg", names={0: "unrelated", 1: "first_breed"}, probs=np.array([1.0, 0.0]))
+
+    filtered = example.FilterClasses((1,))(result)
+
+    assert filtered.names == {0: "first_breed"}
+    assert filtered.probs.top1conf == 0.0
+    assert example.LabelDetections._classification_label(filtered) == "first breed"
 
 
 def test_unrestricted_classes_preserve_native_ranking(example: ModuleType) -> None:
     image = np.zeros((12, 18, 3), dtype=np.uint8)
     result = Results(image, path="crop.jpg", names={0: "dog", 1: "teddy_bear"}, probs=np.array([0.2, 0.8]))
 
-    ranked = example.LabelDetections()._top_predictions(result)
+    filtered = example.FilterClasses()(result)
 
-    assert [label for _, label, _ in ranked] == ["teddy_bear", "dog"]
-    assert ranked[0][2] == pytest.approx(0.8)
+    assert filtered.names == result.names
+    assert filtered.probs.top5 == result.probs.top5
+    np.testing.assert_array_equal(filtered.probs.data, result.probs.data)
+
+
+def test_pipeline_can_use_all_classifier_classes(example: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    image = np.zeros((32, 48, 3), dtype=np.uint8)
+    detector = create_autospec(Model, instance=True, spec_set=True)
+    detector.return_value = [detection_result(image, [[1, 2, 25, 28, 0.8, 1]])]
+    classifier = classifier_model([[0.05, 0.7, 0.1, 0.03, 0.07, 0.03, 0.01, 0.01]])
+    plotted = []
+
+    def plot(result, **options):
+        plotted.append(result)
+        return image.copy()
+
+    monkeypatch.setattr(Results, "plot", plot)
+    example.build_pipeline(
+        detector, classifier, output=tmp_path / "annotated.jpg", class_name="bear", classification_classes=None,
+    )(image)
+
+    assert plotted[0].names == {0: "teddy bear"}
+    classifier.assert_called_once()
 
 
 @pytest.mark.parametrize("has_bear", [False, True])
@@ -454,9 +531,12 @@ def test_cli_defaults_to_tutorial_image_and_dog_breeds(
 def test_classification_label_adds_runner_up_only_below_half(
     example: ModuleType, confidence: float, expected: str,
 ) -> None:
-    predictions = [(0, "first_breed", confidence), (1, "second_breed", 0.2)]
+    classification = Results(
+        np.zeros((12, 18, 3), dtype=np.uint8), path="crop.jpg",
+        names={0: "first_breed", 1: "second_breed"}, probs=np.array([confidence, 0.2]),
+    )
 
-    assert example.LabelDetections._classification_label(predictions) == expected
+    assert example.LabelDetections._classification_label(classification) == expected
 
 
 def test_annotation_uses_breeds_instead_of_numbers_and_applies_score_threshold(
@@ -510,7 +590,7 @@ def test_tutorial_snippets_run_in_order_without_example_imports(
 ) -> None:
     tutorial = EXAMPLES.parent / "docs/tutorials/detect_and_classify.md"
     snippets = re.findall(r"```python[^\n]*\n(.*?)\n```", tutorial.read_text(), re.DOTALL)
-    assert sum("pipeline = Pipeline(" in snippet for snippet in snippets) == 4
+    assert sum("pipeline = Pipeline(" in snippet for snippet in snippets) == 6
     image = np.zeros((32, 48, 3), dtype=np.uint8)
     assert cv2.imwrite(str(tmp_path / "dogs.png"), image)
     monkeypatch.chdir(tmp_path)
@@ -522,7 +602,7 @@ def test_tutorial_snippets_run_in_order_without_example_imports(
     scores = np.zeros(269, dtype=np.float32)
     scores[0], scores[151], scores[207] = 0.5, 0.3, 0.2
     classifier.return_value = [Results(image, path="crop.jpg", names=names, probs=scores)]
-    factory = create_autospec(yolo.YOLO, spec_set=True, side_effect=[detector, detector, detector, classifier, detector, classifier])
+    factory = create_autospec(yolo.YOLO, spec_set=True, side_effect=[detector, detector, detector, detector, classifier, detector, classifier, detector, classifier])
     monkeypatch.setattr(yolo, "YOLO", factory)
     plotted = []
     native_plot = Results.plot
@@ -544,13 +624,14 @@ def test_tutorial_snippets_run_in_order_without_example_imports(
     assert cv2.imread(str(tmp_path / "annotated.jpg")).shape == image.shape
     detector.assert_called_once()
     assert [call.kwargs["model"] for call in factory.call_args_list] == [
-        "yolo26n.pt", "yolo26n.pt", "yolo26n.pt", "yolo26n-cls.pt", "yolo26n.pt", "yolo26n-cls.pt",
+        "yolo26n.pt", "yolo26n.pt", "yolo26n.pt", "yolo26n.pt", "yolo26n-cls.pt",
+        "yolo26n.pt", "yolo26n-cls.pt", "yolo26n.pt", "yolo26n-cls.pt",
     ]
     if has_dog:
         classifier.assert_called_once()
-        ranked = module.LabelDetections(module.CLASSIFICATION_CLASSES)._top_predictions(classifier.return_value[0])
-        assert ranked[0][0] == 151
-        assert ranked[0][2] == pytest.approx(0.3)
+        filtered = module.FilterClasses(module.CLASSIFICATION_CLASSES)(classifier.return_value[0])
+        assert filtered.names[filtered.probs.top1] == "breed-151"
+        assert filtered.probs.top1conf == pytest.approx(0.3)
         assert plotted[0].names == {
             0: "breed-151 / breed-207",
         }
@@ -558,26 +639,40 @@ def test_tutorial_snippets_run_in_order_without_example_imports(
         classifier.assert_not_called()
 
 
-def test_tutorial_pipeline_stages_preserve_prefix_and_highlight_only_new_operators() -> None:
+def test_tutorial_pipeline_stages_preserve_operators_and_highlight_only_new_ones() -> None:
     tutorial = (EXAMPLES.parent / "docs/tutorials/detect_and_classify.md").read_text()
     snippets = re.findall(r"```python([^\n]*)\n(.*?)\n```", tutorial, re.DOTALL)
     stages = [(attributes.strip(), snippet) for attributes, snippet in snippets if "pipeline = Pipeline(" in snippet]
-    assert len(stages) == 4
-    assert [attributes for attributes, _ in stages[1:]] == ['hl_lines="5 6"', 'hl_lines="7-13"', 'hl_lines="14-18"']
+    assert len(stages) == 6
     previous: list[str] = []
-    for _, snippet in stages:
+    for attributes, snippet in stages:
         tree = ast.parse(snippet)
         assignment = next(
             statement for statement in tree.body
             if isinstance(statement, ast.Assign)
             and any(isinstance(target, ast.Name) and target.id == "pipeline" for target in statement.targets)
         )
-        operators = [ast.dump(value) for value in assignment.value.args[0].elts]
-        assert isinstance(assignment.value.args[0].elts[0], ast.Call)
-        assert operators[:len(previous)] == previous
+        nodes = assignment.value.args[0].elts
+        operators = [ast.dump(value) for value in nodes]
+        assert isinstance(nodes[0], ast.Call)
+        cursor, added = 0, []
+        for node, operator in zip(nodes, operators):
+            if cursor < len(previous) and operator == previous[cursor]:
+                cursor += 1
+            else:
+                added.append(node)
+        assert cursor == len(previous)
         assert len(operators) > len(previous)
+        if previous:
+            highlights = re.fullmatch(r'hl_lines="([^"]+)"', attributes)
+            assert highlights is not None
+            highlighted = set()
+            for span in highlights[1].split():
+                bounds = [int(value) for value in span.split("-")]
+                highlighted.update(range(bounds[0], bounds[-1] + 1))
+            assert highlighted == {line for node in added for line in range(node.lineno, node.end_lineno + 1)}
         previous = operators
-    assert len(previous) == 13
+    assert len(previous) == 14
     before_run, run_section = tutorial.split("## Run it on an image", maxsplit=1)
     assert "pipeline(image)" not in before_run
     assert "cv2.imread" not in before_run
@@ -587,6 +682,17 @@ def test_tutorial_pipeline_stages_preserve_prefix_and_highlight_only_new_operato
     assert 'Store("classified")' not in tutorial
     assert 'Recall("classified")' not in tutorial
     assert "@dataclass" not in tutorial
+    classification_section, bonus_and_show = tutorial.split("## Classify objects", maxsplit=1)[1].split("## Bonus: Filter classification classes", maxsplit=1)
+    bonus_section, show_section = bonus_and_show.split("## Show predictions", maxsplit=1)
+    assert "https://ml-pipes.com/regions/#scatter-gather" in classification_section
+    assert "Pick(1),  # Pass only the crops to the classifier." in classification_section
+    assert "Recall" not in classification_section
+    assert "FilterClasses" not in classification_section
+    assert "class FilterClasses" in bonus_section
+    assert "FilterClasses(CLASSIFICATION_CLASSES)" in bonus_section
+    assert 'Recall("detections", prepend=True)' in show_section
+    assert "LabelDetections()," in show_section
+    assert show_section.split("## Run it on an image", maxsplit=1)[0].count("```python") == 1
 
 
 def test_tutorial_opens_with_before_after_comparison_and_generic_stage_titles() -> None:
@@ -595,9 +701,24 @@ def test_tutorial_opens_with_before_after_comparison_and_generic_stage_titles() 
     assert "| Before | After |" in intro
     assert "../assets/detect_and_classify/dogs.png" in intro
     assert "../assets/detect_and_classify/annotated.jpg" in intro
+    assert "## Filter detections" in body
     assert "## Crop selected detections" in body
-    assert "## Classify each crop" in body
+    assert body.index("## Filter detections") < body.index("## Crop selected detections")
+    assert "## Classify objects" in body
     assert "detector = yolo.Predict" not in tutorial
+
+
+def test_tutorial_operators_match_the_current_example() -> None:
+    example_tree = ast.parse((EXAMPLES / "run_detect_and_classify.py").read_text())
+    tutorial = (EXAMPLES.parent / "docs/tutorials/detect_and_classify.md").read_text()
+    snippets = re.findall(r"```python[^\n]*\n(.*?)\n```", tutorial, re.DOTALL)
+    tutorial_tree = ast.parse("\n\n".join(snippets))
+    example_operators = {statement.name: statement for statement in example_tree.body if isinstance(statement, ast.ClassDef)}
+    tutorial_operators = {statement.name: statement for statement in tutorial_tree.body if isinstance(statement, ast.ClassDef)}
+
+    assert example_operators.keys() == tutorial_operators.keys()
+    for name in example_operators:
+        assert ast.dump(example_operators[name]) == ast.dump(tutorial_operators[name]), name
 
 
 def test_unreadable_source_fails_before_model_construction(example: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -643,7 +764,8 @@ def test_classification_helpers_live_inside_their_operator() -> None:
         operator = next(statement for statement in tree.body if isinstance(statement, ast.ClassDef) and statement.name == "LabelDetections")
         methods = {statement.name for statement in operator.body if isinstance(statement, ast.FunctionDef)}
 
-        assert {"_top_predictions", "_classification_label"} <= methods
+        assert "_classification_label" in methods
+        assert "_top_predictions" not in methods
         assert not {"top_predictions", "classification_label", "_top_predictions", "_classification_label"} & module_functions
 
 
@@ -654,9 +776,12 @@ def test_example_pipeline_ends_at_plot_without_classified_storage() -> None:
     pipeline_return = next(statement for statement in build_pipeline.body if isinstance(statement, ast.Return))
     operators = pipeline_return.value.args[0].elts
 
-    assert len(operators) == 13
+    assert len(operators) == 14
     assert ast.unparse(operators[2].func) == "FilterResults"
     assert ast.unparse(operators[3].func) == "CropResults"
+    assert ast.unparse(operators[9].func) == "FilterClasses"
+    assert ast.unparse(operators[10].func) == "Gather"
+    assert ast.unparse(operators[12]) == "LabelDetections()"
     assert isinstance(operators[-1], ast.Call)
     assert ast.unparse(operators[-1].func) == "results.Plot"
     assert 'Store("classified")' not in source
