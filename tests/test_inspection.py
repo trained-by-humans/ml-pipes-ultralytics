@@ -1,10 +1,40 @@
 from unittest.mock import Mock
 
+import numpy as np
 import pytest
 from ultralytics.engine.results import Results
 
 import ml_pipes.ultralytics  # Register the package's inspection formatters.
-from ml_pipes.inspection import PipelineInspector, TextBlock
+from ml_pipes.inspection import ImageBlock, PipelineInspector, TextBlock, ndarray_image_formatter
+
+
+def test_raw_ndarray_inspection_uses_ultralytics_bgr_convention() -> None:
+    bgr = np.array([[[0, 0, 255], [255, 0, 0]]], dtype=np.uint8)
+    original = bgr.copy()
+
+    blocks = PipelineInspector()._value_to_blocks(bgr)
+
+    assert isinstance(blocks[0], ImageBlock)
+    assert blocks[0].title == "ndarray  2×1  BGR"
+    np.testing.assert_array_equal(blocks[0].array, np.array([[[255, 0, 0], [0, 0, 255]]], dtype=np.uint8))
+    np.testing.assert_array_equal(bgr, original)
+
+
+def test_non_image_ndarrays_keep_shape_and_dtype() -> None:
+    blocks = PipelineInspector()._value_to_blocks(np.zeros((2, 4), dtype=np.float32))
+
+    assert len(blocks) == 1 and isinstance(blocks[0], TextBlock)
+    assert dict(blocks[0].rows) == {"shape": "(2, 4)", "dtype": "float32"}
+
+
+def test_rgb_override_is_local_to_an_inspector() -> None:
+    rgb = np.array([[[255, 0, 0]]], dtype=np.uint8)
+    inspector = PipelineInspector().register_value_formatter(
+        np.ndarray, ndarray_image_formatter(default_color_space="RGB"), override=True,
+    )
+
+    np.testing.assert_array_equal(inspector._value_to_blocks(rgb)[0].array, rgb)
+    np.testing.assert_array_equal(PipelineInspector()._value_to_blocks(rgb)[0].array, rgb[:, :, ::-1])
 
 EMPTY_ROWS = {
     "path": "frame.jpg",
