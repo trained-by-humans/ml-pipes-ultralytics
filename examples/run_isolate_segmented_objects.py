@@ -1,4 +1,4 @@
-"""Export one PNG per segmented object, with transparency or a black background.
+"""Segment an image and isolate each object as a transparent or black-background PNG.
 
 Run from the repository root:
     python examples/run_isolate_segmented_objects.py
@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import re
 from pathlib import Path
+from typing import Literal
 from uuid import uuid4
 
 import cv2
@@ -33,7 +34,7 @@ class IsolateObjects:
         *,
         source_name: str = "image",
         crop: bool = False,
-        background: str = "transparent",
+        background: Literal["transparent", "black"] = "transparent",
     ) -> None:
         if background not in {"transparent", "black"}:
             raise ValueError("background must be 'transparent' or 'black'.")
@@ -103,7 +104,7 @@ def build_pipeline(
     device: str | None = None,
     max_det: int = 300,
     crop: bool = False,
-    background: str = "transparent",
+    background: Literal["transparent", "black"] = "transparent",
 ) -> Pipeline[npt.NDArray[np.uint8], list[Path]]:
     """Predict instance masks, select the image result, and export its objects."""
     return Pipeline(

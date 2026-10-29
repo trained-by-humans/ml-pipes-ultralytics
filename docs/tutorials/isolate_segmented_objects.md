@@ -6,9 +6,12 @@ description: >-
 
 # Isolate Segmented Objects
 
+Segment an image, then extract each object with its background removed. This
+is useful for isolating segmented objects as transparent PNGs for compositing,
+product images, or further processing of individual objects. Following the
 [Ultralytics Object Isolation](https://docs.ultralytics.com/guides/isolating-segmentation-objects/)
-segments objects and saves each one with its background removed. This tutorial
-makes inference and mask-based isolation explicit pipeline steps.
+workflow, this tutorial makes inference and mask-based isolation explicit
+pipeline steps.
 
 Before you begin, follow the [Installation](../installation.md) instructions.
 Run the Python snippets in order in the same script or notebook.
@@ -19,22 +22,21 @@ Run the Python snippets in order in the same script or notebook.
 
 ## Build the pipeline
 
-`yolo.Predict` returns native `list[Results]`. A single image still produces a
-list, so `Select(0)` makes the one native result available to the following
-operator. `IsolateObjects` uses its instance masks to save individual PNGs and
-returns their paths. Here, `crop=True` also trims each image to its detection
-box, like [Detect and Crop](detect_and_crop.md).
+Segmentation finds objects in an image and produces a mask for each one,
+describing which pixels belong to that object. The pipeline first runs a
+YOLO segmentation model to obtain these masks. See
+[Segment and Annotate](segment_and_annotate.md) for more about segmentation.
 
-Define the custom operator below before building the pipeline. It uses
-`result.masks.xy`, whose polygons are already scaled to original-image
-coordinates with inference padding removed. Each binary mask keeps the
-object's pixels and supplies its PNG alpha channel.
+`IsolateObjects` then uses each mask to separate the object from its
+background. It keeps the object's pixels, makes the surrounding pixels
+transparent, and saves the isolated object as a PNG:
 
-??? example "Define the IsolateObjects operator"
+??? note "Define the IsolateObjects operator"
 
     ```python
     import re
     from pathlib import Path
+    from typing import Literal
     from uuid import uuid4
 
     import cv2
@@ -54,7 +56,7 @@ object's pixels and supplies its PNG alpha channel.
             *,
             source_name: str = "image",
             crop: bool = False,
-            background: str = "transparent",
+            background: Literal["transparent", "black"] = "transparent",
         ) -> None:
             if background not in {"transparent", "black"}:
                 raise ValueError("background must be 'transparent' or 'black'.")
@@ -112,6 +114,10 @@ object's pixels and supplies its PNG alpha channel.
             return paths
     ```
 
+Here, `crop=True` also trims each isolated image to the object's bounding
+box, like [Detect and Crop](detect_and_crop.md). The mask removes the
+background within that box as well.
+
 ```python
 from ml_pipes.core import Pipeline
 from ml_pipes.standard import Select
@@ -127,10 +133,7 @@ pipeline = Pipeline(
 )
 ```
 
-Use a segmentation checkpoint (`-seg`) to obtain instance masks. Set
-`crop=False` to preserve the original image dimensions, or
-`background="black"` to write opaque, three-channel PNGs. Crops round box
-coordinates outward and clamp them to the image bounds. The native polygon
+You can also set `background="black"` to write opaque, three-channel PNGs. The native polygon
 representation does not preserve interior holes in the mask tensor.
 
 ## Run it on an image
