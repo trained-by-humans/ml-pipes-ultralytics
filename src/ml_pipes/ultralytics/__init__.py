@@ -3,10 +3,21 @@ from __future__ import annotations
 
 from typing import Any
 
-from ml_pipes.inspection import TextBlock
+import numpy as np
+
+from ml_pipes.inspection import TextBlock, ndarray_image_formatter
 from ml_pipes.inspection._global_registry import register_value_formatter
 
 from . import results, yolo
+
+
+# Ultralytics/OpenCV image arrays use BGR channel order. Register the
+# convention on import so inspectors convert bare arrays to RGB previews.
+register_value_formatter(
+    np.ndarray,
+    ndarray_image_formatter(default_color_space="BGR"),
+    override=True,
+)
 
 
 def _format_result(value: Any) -> list[TextBlock]:

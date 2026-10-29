@@ -53,3 +53,22 @@ See the upstream [Ultralytics `Results` reference](https://docs.ultralytics.com/
 
 The argument-less `Results` methods `cpu`, `numpy`, `cuda`, `new`, and
 `verbose` can be used directly as unbound methods in a pipeline.
+
+## Inspection
+
+Importing `ml_pipes.ultralytics` registers the **BGR** convention for bare
+`np.ndarray` image previews, matching Ultralytics and OpenCV. Inspection
+converts these previews to RGB without changing the source arrays. Other
+arrays retain their shape and dtype summaries. Native `Results` values show
+text summaries of their predictions.
+
+For pipelines using RGB arrays, override the convention on your inspector:
+
+```python
+import numpy as np
+from ml_pipes.inspection import PipelineInspector, ndarray_image_formatter
+
+inspector = PipelineInspector().register_value_formatter(
+    np.ndarray, ndarray_image_formatter(default_color_space="RGB"), override=True,
+)
+```
