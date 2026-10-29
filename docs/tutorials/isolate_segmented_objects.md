@@ -1,7 +1,7 @@
 ---
 title: Isolate Segmented Objects with Ultralytics YOLO
 description: >-
-  Build a pipeline with Ultralytics YOLO to segment objects and save individual transparent PNGs, with optional box cropping or black backgrounds in ml-pipes.
+  Use Ultralytics YOLO segmentation masks to extract individual objects, remove backgrounds, and save transparent PNGs in Python, with optional cropping.
 ---
 
 # Isolate Segmented Objects
