@@ -11,6 +11,9 @@ adds a mask to every detected instance. This pipeline keeps the native result
 intact until the final plotting step, where Ultralytics renders masks, boxes,
 labels, and confidence values.
 
+To export individual objects as transparent PNGs, continue with
+[Isolate Segmented Objects](isolate_segmented_objects.md).
+
 Before you begin, follow the [Installation](../installation.md) instructions.
 Run the Python snippets in order in the same script or notebook.
 
