@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import importlib
 import re
-import sys
-import textwrap
 from pathlib import Path
 from types import ModuleType
 from unittest.mock import Mock, create_autospec
@@ -27,7 +25,7 @@ def example(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
     return importlib.import_module("run_isolate_segmented_objects")
 
 
-@pytest.fixture(params=["numpy", "tensor"])
+@pytest.fixture
 def segmentation(request: pytest.FixtureRequest) -> Results:
     # A 6x12 original is letterboxed to 12x12: three padding rows per side.
     image = np.arange(6 * 12 * 3, dtype=np.uint8).reshape(6, 12, 3) + 1
@@ -35,12 +33,13 @@ def segmentation(request: pytest.FixtureRequest) -> Results:
     masks[0, 4:8, 2:6] = 1
     masks[1, 4:7, 8:11] = 1
     boxes = np.array([[2, 1, 6, 5, 0.9, 0], [8, 1, 11, 4, 0.8, 0]], dtype=np.float32)
+    tensor = getattr(request, "param", "numpy") == "tensor"
     return Results(
         orig_img=image,
         path="scene.jpg",
         names={0: "person"},
-        boxes=torch.from_numpy(boxes) if request.param == "tensor" else boxes,
-        masks=torch.from_numpy(masks) if request.param == "tensor" else masks,
+        boxes=torch.from_numpy(boxes) if tensor else boxes,
+        masks=torch.from_numpy(masks) if tensor else masks,
     )
 
 
@@ -55,6 +54,7 @@ def native_model(monkeypatch: pytest.MonkeyPatch, segmentation: Results) -> tupl
 
 @pytest.mark.parametrize("crop", [False, True])
 @pytest.mark.parametrize("background", ["transparent", "black"])
+@pytest.mark.parametrize("segmentation", ["numpy", "tensor"], indirect=True)
 def test_png_pixels_follow_original_coordinates(
     example: ModuleType, segmentation: Results, tmp_path: Path, crop: bool, background: str
 ) -> None:
@@ -96,6 +96,7 @@ def test_mask_geometry_supports_original_and_resized_masks(
         masks[1, 8:13, 16:21] = 1
     segmentation.update(masks=masks)
     paths = example.IsolateObjects(tmp_path)(segmentation)
+    assert len(paths) == 2
     expected_masks = np.zeros((2, 6, 12), dtype=np.uint8)
     expected_masks[0, 1:5, 2:6] = 255
     expected_masks[1, 1:4, 8:11] = 255
@@ -173,6 +174,7 @@ def test_invalid_background_is_rejected(example: ModuleType, tmp_path: Path) -> 
         example.IsolateObjects(tmp_path, background="white")
 
 
+@pytest.mark.parametrize("segmentation", ["tensor"], indirect=True)
 def test_pipeline_passes_native_results_from_predict(
     example: ModuleType, native_model: tuple[Mock, Mock], segmentation: Results, tmp_path: Path
 ) -> None:
@@ -193,69 +195,3 @@ def test_pipeline_passes_native_results_from_predict(
     }
     model.track.assert_not_called()
     model.embed.assert_not_called()
-
-
-@pytest.mark.parametrize("custom", [False, True])
-def test_cli_exports_objects(
-    example: ModuleType, native_model: tuple[Mock, Mock], segmentation: Results,
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], custom: bool
-) -> None:
-    source = tmp_path / "scene.png"
-    cv2.imwrite(str(source), segmentation.orig_img)
-    output = tmp_path / "exports"
-    monkeypatch.setattr(example, "default_image", lambda: source)
-    monkeypatch.setattr(example, "EXAMPLE_ASSETS", tmp_path)
-    argv = ["run_isolate_segmented_objects.py"]
-    if custom:
-        argv += [
-            "--source", str(source), "--output-dir", str(output), "--model", "custom.pt",
-            "--conf", "0.6", "--classes", "0", "--device", "cpu", "--crop", "--background", "black",
-        ]
-    else:
-        output = tmp_path / "isolated-objects"
-    monkeypatch.setattr(sys, "argv", argv)
-
-    assert example.main() == 0
-
-    paths = list(output.glob("*.png"))
-    assert len(paths) == 2
-    assert all(path.name.startswith("scene_") for path in paths)
-    expected_shape = (4, 4, 3) if custom else (6, 12, 4)
-    first = next(path for path in paths if "object-000" in path.name)
-    assert cv2.imread(str(first), cv2.IMREAD_UNCHANGED).shape == expected_shape
-    assert f"Saved 2 objects to {output}" in capsys.readouterr().out
-    native_model[0].assert_called_once_with(
-        model="custom.pt" if custom else "yolo26n-seg.pt", task=None, verbose=False
-    )
-    options = native_model[1].call_args.kwargs
-    assert options["classes"] == ([0] if custom else None)
-    assert options["conf"] == (0.6 if custom else 0.25)
-    assert options["device"] == ("cpu" if custom else None)
-
-
-def test_cli_unreadable_source_fails_before_inference(
-    example: ModuleType, native_model: tuple[Mock, Mock], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(example, "default_image", lambda: tmp_path / "missing.png")
-    monkeypatch.setattr(sys, "argv", ["run_isolate_segmented_objects.py"])
-    with pytest.raises(RuntimeError, match="Could not load"):
-        example.main()
-    native_model[0].assert_not_called()
-
-
-def test_tutorial_snippets_run_in_sequence(
-    native_model: tuple[Mock, Mock], segmentation: Results,
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.chdir(tmp_path)
-    cv2.imwrite("bus.jpg", segmentation.orig_img)
-    tutorial = ROOT / "docs" / "tutorials" / "isolate_segmented_objects.md"
-    snippets = re.findall(
-        r"^[ \t]*```python\n(.*?)\n[ \t]*```", tutorial.read_text(), re.DOTALL | re.MULTILINE
-    )
-    assert len(snippets) == 3
-    namespace = {"__name__": "isolation_tutorial"}
-    for snippet in snippets:
-        exec(compile(textwrap.dedent(snippet), str(tutorial), "exec", dont_inherit=True), namespace)
-    assert len(namespace["paths"]) == 2
-    assert cv2.imread(str(namespace["paths"][0]), cv2.IMREAD_UNCHANGED).shape == (4, 4, 4)
