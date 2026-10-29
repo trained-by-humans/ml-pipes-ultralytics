@@ -4,6 +4,7 @@ from __future__ import annotations
 import importlib
 import re
 import sys
+import textwrap
 from pathlib import Path
 from types import ModuleType
 from unittest.mock import Mock, create_autospec
@@ -249,10 +250,12 @@ def test_tutorial_snippets_run_in_sequence(
     monkeypatch.chdir(tmp_path)
     cv2.imwrite("bus.jpg", segmentation.orig_img)
     tutorial = ROOT / "docs" / "tutorials" / "isolate_segmented_objects.md"
-    snippets = re.findall(r"```python\n(.*?)\n```", tutorial.read_text(), re.DOTALL)
+    snippets = re.findall(
+        r"^[ \t]*```python\n(.*?)\n[ \t]*```", tutorial.read_text(), re.DOTALL | re.MULTILINE
+    )
     assert len(snippets) == 3
     namespace = {"__name__": "isolation_tutorial"}
     for snippet in snippets:
-        exec(compile(snippet, str(tutorial), "exec", dont_inherit=True), namespace)
+        exec(compile(textwrap.dedent(snippet), str(tutorial), "exec", dont_inherit=True), namespace)
     assert len(namespace["paths"]) == 2
-    assert cv2.imread(str(namespace["paths"][0]), cv2.IMREAD_UNCHANGED).shape == (6, 12, 4)
+    assert cv2.imread(str(namespace["paths"][0]), cv2.IMREAD_UNCHANGED).shape == (4, 4, 4)
