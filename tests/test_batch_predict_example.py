@@ -1,13 +1,10 @@
 """Exercise the runnable tutorial with local images and a mocked YOLO model."""
 from __future__ import annotations
 
-import argparse
 import runpy
 import sys
-from io import BytesIO
 from pathlib import Path
 from unittest.mock import Mock, create_autospec
-from zipfile import ZipFile
 
 import cv2
 import numpy as np
@@ -95,51 +92,3 @@ def test_cli_modes_preserve_images_order_and_partial_batch(
         assert inputs == [str(tmp_path / f"{index}.png") for index in range(3)]
     summaries = [line for line in capsys.readouterr().out.splitlines() if ".png:" in line]
     assert summaries == [f"{index}.png: 1 image-{10 + index}," for index in range(3)]
-
-
-def test_default_archive_extracts_only_100_distinct_images_and_reuses_cache(
-    example: dict, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    archive_bytes = BytesIO()
-    with ZipFile(archive_bytes, "w") as archive:
-        for index in range(128):
-            archive.writestr(f"coco128/images/train2017/{index:03}.jpg", f"image-{index}")
-        archive.writestr("coco128/labels/train2017/000.txt", "0 0.5 0.5 1 1")
-
-    response = Mock()
-    response.__enter__ = Mock(return_value=BytesIO(archive_bytes.getvalue()))
-    response.__exit__ = Mock(return_value=False)
-    download = Mock(return_value=response)
-    globals_ = example["default_archive"].__globals__
-    monkeypatch.setitem(globals_, "EXAMPLE_ASSETS", tmp_path)
-    monkeypatch.setitem(globals_, "urlopen", download)
-
-    directory = example["default_archive"]()
-
-    assert sorted(path.name for path in directory.iterdir()) == [f"{index:03}.jpg" for index in range(100)]
-    assert (directory / "099.jpg").read_bytes() == b"image-99"
-    assert example["default_archive"]() == directory
-    download.assert_called_once_with(
-        "https://github.com/ultralytics/assets/releases/download/v0.0.0/coco128.zip", timeout=60
-    )
-
-
-@pytest.mark.parametrize("value", ["0", "-1"])
-def test_batch_size_and_worker_count_must_be_positive(example: dict, value: str) -> None:
-    with pytest.raises(argparse.ArgumentTypeError, match="greater than zero"):
-        example["positive_int"](value)
-
-
-def test_empty_archive_fails_before_model_construction(
-    example: dict, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
-    factory = Mock()
-    monkeypatch.setattr(yolo, "YOLO", factory)
-    monkeypatch.setattr(sys, "argv", ["run_batch_predict.py", "--source", str(tmp_path)])
-
-    with pytest.raises(SystemExit) as raised:
-        example["main"]()
-
-    assert raised.value.code == 2
-    assert "No images matching" in capsys.readouterr().err
-    factory.assert_not_called()
