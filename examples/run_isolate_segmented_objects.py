@@ -1,8 +1,8 @@
-"""Segment an image and isolate each object as a transparent or black-background PNG.
+"""Isolate segmented objects in memory, optionally saving them as PNG files.
 
 Run from the repository root:
     python examples/run_isolate_segmented_objects.py
-    python examples/run_isolate_segmented_objects.py --crop --background black
+    python examples/run_isolate_segmented_objects.py --crop --background black --save
 """
 from __future__ import annotations
 
@@ -23,22 +23,26 @@ from ml_pipes.operator import Operator
 from ml_pipes.standard import Select
 from ml_pipes.ultralytics import yolo
 
+ImageArray = npt.NDArray[np.uint8]
+
 
 @Operator
 class IsolateObjects:
-    """Rasterize native mask polygons and save isolated objects as PNG files."""
+    """Return aligned detections and isolated images, optionally saving PNGs."""
 
     def __init__(
         self,
-        output_dir: Path,
         *,
-        source_name: str = "image",
+        save: bool = False,
         crop: bool = False,
+        source_name: str = "image",
+        output_dir: Path = Path("isolated-objects"),
         background: Literal["transparent", "black"] = "transparent",
     ) -> None:
         if background not in {"transparent", "black"}:
             raise ValueError("background must be 'transparent' or 'black'.")
         self.output_dir = Path(output_dir)
+        self.save = save
         self.source_name = self._filename_part(source_name)
         self.crop = crop
         self.background = background
@@ -47,10 +51,11 @@ class IsolateObjects:
     def _filename_part(value: str) -> str:
         return re.sub(r"[^a-zA-Z0-9_-]+", "_", value)[:80].strip("_") or "unknown"
 
-    def __call__(self, result: Results) -> list[Path]:
-        self.output_dir.mkdir(parents=True, exist_ok=True)
+    def __call__(self, result: Results) -> tuple[Results, list[ImageArray]]:
+        if self.save:
+            self.output_dir.mkdir(parents=True, exist_ok=True)
         if result.masks is None or result.boxes is None or len(result.boxes) == 0:
-            return []
+            return result[:0], []
 
         image = result.orig_img
         height, width = image.shape[:2]
@@ -59,8 +64,8 @@ class IsolateObjects:
         classes = native_boxes.cls
         # masks.xy removes inference letterboxing and scales to orig_img pixels.
         polygons = result.masks.xy
-        run_id = uuid4().hex
-        paths = []
+        run_id = uuid4().hex if self.save else None
+        indices, images = [], []
         for index, (polygon, box, class_id) in enumerate(zip(polygons, boxes, classes)):
             if len(polygon) < 3:
                 continue
@@ -79,23 +84,26 @@ class IsolateObjects:
                 x1, y1 = np.clip(np.ceil(box[2:]), [0, 0], [width, height]).astype(int)
                 if x0 >= x1 or y0 >= y1:
                     continue
-                isolated = isolated[y0:y1, x0:x1]
+                isolated = isolated[y0:y1, x0:x1].copy()
 
-            class_id = int(class_id)
-            label = self._filename_part(result.names[class_id])
-            path = self.output_dir / (
-                f"{self.source_name}_{run_id}_object-{index:03d}_class-{class_id}-{label}.png"
-            )
-            if not cv2.imwrite(str(path), isolated):
-                raise OSError(f"Could not save {path}")
-            paths.append(path)
-        return paths
+            if self.save:
+                class_id = int(class_id)
+                label = self._filename_part(result.names[class_id])
+                path = self.output_dir / (
+                    f"{self.source_name}_{run_id}_object-{index:03d}_class-{class_id}-{label}.png"
+                )
+                if not cv2.imwrite(str(path), isolated):
+                    raise OSError(f"Could not save {path}")
+            indices.append(index)
+            images.append(isolated)
+        return result[indices], images
 
 
 def build_pipeline(
     model: str = "yolo26n-seg.pt",
     output_dir: Path = EXAMPLE_ASSETS / "isolated-objects",
     *,
+    save: bool = False,
     source_name: str = "image",
     classes: list[int] | None = None,
     conf: float = 0.25,
@@ -105,8 +113,8 @@ def build_pipeline(
     max_det: int = 300,
     crop: bool = False,
     background: Literal["transparent", "black"] = "transparent",
-) -> Pipeline[npt.NDArray[np.uint8], list[Path]]:
-    """Predict instance masks, select the image result, and export its objects."""
+) -> Pipeline[ImageArray, tuple[Results, list[ImageArray]]]:
+    """Predict instance masks and return aligned detections and isolated images."""
     return Pipeline(
         [
             yolo.Predict(
@@ -119,7 +127,7 @@ def build_pipeline(
                 max_det=max_det,
             ),
             Select(0),
-            IsolateObjects(output_dir, source_name=source_name, crop=crop, background=background),
+            IsolateObjects(output_dir=output_dir, save=save, source_name=source_name, crop=crop, background=background),
         ],
         auto_validate=True,
     )
@@ -132,6 +140,7 @@ def main() -> int:
     )
     parser.add_argument("--source", type=Path, default=default_image())
     parser.add_argument("--output-dir", type=Path, default=EXAMPLE_ASSETS / "isolated-objects")
+    parser.add_argument("--save", action="store_true", help="Save isolated images as PNGs in --output-dir.")
     parser.add_argument("--model", default="yolo26n-seg.pt")
     parser.add_argument("--classes", type=int, nargs="+", default=None)
     parser.add_argument("--conf", type=float, default=0.25)
@@ -139,7 +148,7 @@ def main() -> int:
     parser.add_argument("--imgsz", type=int, default=640)
     parser.add_argument("--device", default=None)
     parser.add_argument("--max-det", type=int, default=300)
-    parser.add_argument("--crop", action="store_true", help="Crop each PNG to its bounded detection box.")
+    parser.add_argument("--crop", action="store_true", help="Crop each isolated image to its bounded detection box.")
     parser.add_argument("--background", choices=("transparent", "black"), default="transparent")
     args = parser.parse_args()
 
@@ -149,6 +158,7 @@ def main() -> int:
     pipeline = build_pipeline(
         args.model,
         args.output_dir,
+        save=args.save,
         source_name=args.source.stem,
         classes=args.classes,
         conf=args.conf,
@@ -161,10 +171,10 @@ def main() -> int:
     )
     pipeline.validate()
     pipeline.describe()
-    paths = pipeline(image)
-    print(f"Saved {len(paths)} objects to {args.output_dir}")
-    for path in paths:
-        print(path)
+    detections, images = pipeline(image)
+    print(f"Isolated {len(images)} objects")
+    if args.save:
+        print(f"PNG output directory: {args.output_dir}")
     return 0
 
 

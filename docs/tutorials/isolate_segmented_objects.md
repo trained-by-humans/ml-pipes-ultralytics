@@ -29,7 +29,7 @@ YOLO segmentation model to obtain these masks. See
 
 `IsolateObjects` then uses each mask to separate the object from its
 background. It keeps the object's pixels, makes the surrounding pixels
-transparent, and saves the isolated object as a PNG:
+transparent (or black), and returns the isolated objects:
 
 ??? note "Define the IsolateObjects operator"
 
@@ -41,26 +41,31 @@ transparent, and saves the isolated object as a PNG:
 
     import cv2
     import numpy as np
+    import numpy.typing as npt
     from ultralytics.engine.results import Results
 
     from ml_pipes.operator import Operator
 
+    ImageArray = npt.NDArray[np.uint8]
+
 
     @Operator
     class IsolateObjects:
-        """Rasterize native mask polygons and save isolated objects as PNG files."""
+        """Return aligned detections and isolated images, optionally saving PNGs."""
 
         def __init__(
             self,
-            output_dir: Path,
             *,
-            source_name: str = "image",
+            save: bool = False,
             crop: bool = False,
+            source_name: str = "image",
+            output_dir: Path = Path("isolated-objects"),
             background: Literal["transparent", "black"] = "transparent",
         ) -> None:
             if background not in {"transparent", "black"}:
                 raise ValueError("background must be 'transparent' or 'black'.")
             self.output_dir = Path(output_dir)
+            self.save = save
             self.source_name = self._filename_part(source_name)
             self.crop = crop
             self.background = background
@@ -69,10 +74,11 @@ transparent, and saves the isolated object as a PNG:
         def _filename_part(value: str) -> str:
             return re.sub(r"[^a-zA-Z0-9_-]+", "_", value)[:80].strip("_") or "unknown"
 
-        def __call__(self, result: Results) -> list[Path]:
-            self.output_dir.mkdir(parents=True, exist_ok=True)
+        def __call__(self, result: Results) -> tuple[Results, list[ImageArray]]:
+            if self.save:
+                self.output_dir.mkdir(parents=True, exist_ok=True)
             if result.masks is None or result.boxes is None or len(result.boxes) == 0:
-                return []
+                return result[:0], []
 
             image = result.orig_img
             height, width = image.shape[:2]
@@ -81,8 +87,8 @@ transparent, and saves the isolated object as a PNG:
             classes = native_boxes.cls
             # masks.xy removes inference letterboxing and scales to orig_img pixels.
             polygons = result.masks.xy
-            run_id = uuid4().hex
-            paths = []
+            run_id = uuid4().hex if self.save else None
+            indices, images = [], []
             for index, (polygon, box, class_id) in enumerate(zip(polygons, boxes, classes)):
                 if len(polygon) < 3:
                     continue
@@ -101,22 +107,24 @@ transparent, and saves the isolated object as a PNG:
                     x1, y1 = np.clip(np.ceil(box[2:]), [0, 0], [width, height]).astype(int)
                     if x0 >= x1 or y0 >= y1:
                         continue
-                    isolated = isolated[y0:y1, x0:x1]
+                    isolated = isolated[y0:y1, x0:x1].copy()
 
-                class_id = int(class_id)
-                label = self._filename_part(result.names[class_id])
-                path = self.output_dir / (
-                    f"{self.source_name}_{run_id}_object-{index:03d}_class-{class_id}-{label}.png"
-                )
-                if not cv2.imwrite(str(path), isolated):
-                    raise OSError(f"Could not save {path}")
-                paths.append(path)
-            return paths
+                if self.save:
+                    class_id = int(class_id)
+                    label = self._filename_part(result.names[class_id])
+                    path = self.output_dir / (
+                        f"{self.source_name}_{run_id}_object-{index:03d}_class-{class_id}-{label}.png"
+                    )
+                    if not cv2.imwrite(str(path), isolated):
+                        raise OSError(f"Could not save {path}")
+                indices.append(index)
+                images.append(isolated)
+            return result[indices], images
     ```
 
-Here, `crop=True` also trims each isolated image to the object's bounding
-box, like [Detect and Crop](detect_and_crop.md). The mask removes the
-background within that box as well.
+Here, `crop=True` also trims each isolated image to the object's bounding box, like [Detect and Crop](detect_and_crop.md).
+Transparent images are four-channel BGRA arrays. Set `background="black"` to
+return opaque, three-channel BGR images.
 
 ```python
 from ml_pipes.core import Pipeline
@@ -127,20 +135,17 @@ pipeline = Pipeline(
     [
         yolo.Predict(model="yolo26n-seg.pt", conf=0.25),
         Select(0),
-        IsolateObjects(Path("isolated-objects"), source_name="bus", crop=True),
+        IsolateObjects(crop=True),
     ],
     auto_validate=True,
 )
 ```
 
-You can also set `background="black"` to write opaque, three-channel PNGs. The native polygon
-representation does not preserve interior holes in the mask tensor.
-
 ## Run it on an image
 
-The pipeline accepts the BGR array decoded by OpenCV and returns the saved
-PNG paths. Mask isolation and PNG writing happen inside the configured
-`IsolateObjects` operator.
+The pipeline accepts an image as a BGR NumPy array, such as the one decoded
+by OpenCV. It returns `(detections, images)`: native `Results` and a list of
+isolated NumPy images, with each image paired to the detection at the same index.
 
 ```python
 import cv2
@@ -149,25 +154,20 @@ image = cv2.imread("bus.jpg")
 if image is None:
     raise RuntimeError("Could not load bus.jpg")
 
-paths = pipeline(image)
-print(f"Saved {len(paths)} isolated objects")
-for path in paths:
-    print(path)
+detections, images = pipeline(image)
+print(f"Isolated {len(images)} objects")
 ```
-
-The bus and person PNGs below are produced by the isolation step. Their
-backgrounds are transparent, including the areas around each object within
-its bounding box.
 
 | Isolated bus | Isolated person |
 |---|---|
 | ![Isolated bus](../assets/isolate_segmented_objects/bus.png) | ![Isolated person](../assets/isolate_segmented_objects/person.png) |
 
-Files are written to `isolated-objects/` with names such as
-`bus_<uuid>_object-000_class-0-person.png`. The source stem, invocation UUID,
-object index, and class identifier distinguish objects of the same class and
-prevent repeated calls from overwriting previous exports. Missing masks or
-empty detections return an empty path list without deleting earlier files.
+Set `save=True` on `IsolateObjects` to also save PNGs, and use `output_dir` to
+choose where to save them.
+
+> [!TIP]
+> You can also pass the isolated images to a second model (For YOLO models use `background="black"` to produce
+> three-channel BGR images), following the [Detect and Classify](detect_and_classify.md) pattern.
 
 ## Run the example
 
@@ -177,14 +177,15 @@ these commands from its root directory:
 
 ```bash
 python examples/run_isolate_segmented_objects.py --crop
-python examples/run_isolate_segmented_objects.py --source path/to/image.jpg --crop
-python examples/run_isolate_segmented_objects.py --crop --background black
+python examples/run_isolate_segmented_objects.py --source path/to/image.jpg --crop --save
+python examples/run_isolate_segmented_objects.py --crop --background black --save
 ```
 
-The example uses the bundled bus image by default and saves PNGs under
-`examples/.example_assets/isolated-objects/`. Use `--output-dir` to choose a
-different directory. It also exposes the model, confidence, classes, and
-device through `--model`, `--conf`, `--classes`, and `--device`.
+The example uses the bundled bus image by default. With `--save`, it also
+saves PNGs under `examples/.example_assets/isolated-objects/`; omit `--save`
+to isolate objects in memory only. Use `--output-dir` to choose a different
+directory. It also exposes the model, confidence, classes, and device through
+`--model`, `--conf`, `--classes`, and `--device`.
 
 See [`run_isolate_segmented_objects.py`](https://github.com/trained-by-humans/ml-pipes-ultralytics/blob/main/examples/run_isolate_segmented_objects.py)
 for all command-line options.
