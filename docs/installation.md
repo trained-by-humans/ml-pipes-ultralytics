@@ -21,6 +21,13 @@ The package installs `ml-pipes-core`, `ml-pipes-vision`, and Ultralytics, along
 with their dependencies, including NumPy, OpenCV, and PyTorch. The tutorials
 do not require a separate vision-operator installation.
 
+Starting with version `0.1.4`, the package requires stable `ml-pipes-core` and
+`ml-pipes-vision` releases in the range `>=0.1.3,<0.2.0`, replacing the earlier
+`0.1.2rc1` pins. Ultralytics must be version `8.4.174` or newer. CI checks
+Python 3.10 through 3.13 with the lowest and latest permitted Ultralytics
+releases; framework version `0.1.3` is the tested baseline. The framework
+upper bound excludes the next minor release pending compatibility testing.
+
 ## Install the latest changes from GitHub
 
 To use changes that have not yet been published to PyPI, install directly

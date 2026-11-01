@@ -23,6 +23,12 @@ For release candidates, exact pins to the tested framework candidate are
 allowed. Stable releases should use documented, tested bounds rather than
 permanent exact framework pins.
 
+The `0.1.4` release uses stable `ml-pipes-core` and `ml-pipes-vision` bounds
+of `>=0.1.3,<0.2.0`. Test against the published `0.1.3` baseline before
+releasing. Widening the range to the next minor release requires a new
+compatibility check. Keep the installation guide and `CHANGELOG.md` aligned
+with any dependency changes.
+
 CI must pass on Python 3.10 through 3.13. It runs package tests, builds both
 the wheel and source distribution, runs `twine check`, and installs the built
 wheel in a clean environment for an import and dependency check.
