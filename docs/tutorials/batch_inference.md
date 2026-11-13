@@ -58,7 +58,7 @@ print(f"Sample images are ready in {destination}")
 ```
 
 This URL is the download declared in Ultralytics'
-[COCO128 dataset configuration](https://github.com/ultralytics/ultralytics/blob/v8.4.174/ultralytics/cfg/datasets/coco128.yaml).
+[COCO128 dataset configuration](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/datasets/coco128.yaml).
 The images retain their upstream licenses; see [COCO's terms of use](https://cocodataset.org/#termsofuse)
 before redistributing them. This download is outside all inference measurements.
 
@@ -138,7 +138,7 @@ an arbitrary list for us.
 For path lists, `autocast_list` iterates over the sources, then
 `LoadPilAndNumpy` converts the images serially. Batching inference therefore
 does not make decoding concurrent. See the
-[pinned loader source (8.4.174)](https://github.com/ultralytics/ultralytics/blob/v8.4.174/ultralytics/data/loaders.py)
+[loader source](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/data/loaders.py)
 and the related [batching discussion in issue #9838](https://github.com/ultralytics/ultralytics/issues/9838).
 
 ## Load and decode images concurrently
@@ -208,6 +208,10 @@ call, with native decoding as the baseline.
     |---|---:|---:|---:|
     | Batch with native decode | 228.80 ms | 34.96 | 1.00× |
     | Batch with concurrent decode | 196.77 ms | 40.66 | 1.16× |
+
+    > [!NOTE]
+    > These CPU measurements use Ultralytics `8.4.152`. See the
+    > [recorded environment](https://github.com/Tenkei/model-scaffolding-bench/blob/bd424c95db6aeae0be50715584f6b3086e537a68/results/ultralytics-2026-09-15/environment.txt).
 
 === "MPS"
 
