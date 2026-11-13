@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.5
+
+### Changed
+
+- Raise the Ultralytics baseline from `8.4.174` to `8.4.212` and add an
+  upper bound of `<8.5` so the next minor series is reviewed before use.
+
+[Full comparison with 0.1.4](https://github.com/trained-by-humans/ml-pipes-ultralytics/compare/v0.1.4...v0.1.5)
+
 ## 0.1.4
 
 ### Fixed

@@ -200,7 +200,7 @@ pipeline = Pipeline(
 A general-purpose classifier can predict many categories unrelated to your
 task. Filter its output to consider only the classes you want. Here we keep
 ImageNet domestic dog breed IDs `151` through `268`, excluding wild canids
-([ImageNet class mapping](https://github.com/ultralytics/ultralytics/blob/v8.4.174/ultralytics/cfg/datasets/ImageNet.yaml)).
+([ImageNet class mapping](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/datasets/ImageNet.yaml)).
 
 This selects candidate labels after inference, not a different model. Keep
 the original scores without renormalizing: restricting the label set does
